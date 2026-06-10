@@ -403,6 +403,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com"];
+const BUILD = "v6 · ranking corrigido";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -1736,6 +1737,7 @@ function App(){
       {tab==="admin" && isAdmin && <Admin matches={matches} official={official}
         onImport={onImport} onSaveMatch={onSaveMatch} onDeleteMatch={onDeleteMatch} onSaveResult={onSaveResult} onSaveOfficial={onSaveOfficial}/>}
 
+      <div style={{textAlign:"center",color:"var(--muted-2)",fontSize:"12px",padding:"26px 0 34px"}}>BROS<span style={{color:"var(--redlao)"}}>.lão</span> · {BUILD}</div>
       <Toast msg={toast}/>
     </>
   );
