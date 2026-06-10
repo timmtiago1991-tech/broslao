@@ -633,7 +633,6 @@ function makeFirebaseStore(){
       : firebase.auth.Auth.Persistence.SESSION),
     signUp:(e,p)=> auth.createUserWithEmailAndPassword(e,p),
     signIn:(e,p)=> auth.signInWithEmailAndPassword(e,p),
-    signInGoogle:()=> auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()),
     signOut:()=> auth.signOut(),
     subParticipants:(cb)=> sub("participants",cb),
     subMatches:(cb)=> sub("matches",cb),
@@ -1360,21 +1359,20 @@ function Auth(){
   const seen = (()=>{ try{ return !!localStorage.getItem("broslao_acct"); }catch(e){ return false; } })();
   const [mode,setMode]=useState(seen ? "in" : "up");   // máquina nova → criar conta
   const [email,setEmail]=useState(""); const [pass,setPass]=useState(""); const [err,setErr]=useState("");
-  const [keep,setKeep]=useState(true);
+  const [keep,setKeep]=useState(true); const [busy,setBusy]=useState(false);
   const remember=()=>{ try{ localStorage.setItem("broslao_acct","1"); }catch(e){} };
   const signup = mode==="up";
   const go=async()=>{
-    setErr("");
+    const mail=email.trim();
+    if(!mail || !pass){ setErr("Preencha e-mail e senha."); return; }
+    if(signup && pass.length<6){ setErr("A senha precisa ter ao menos 6 caracteres."); return; }
+    setErr(""); setBusy(true);
+    try{ await store.setKeepLogged(keep); }catch(e){ /* persistência é opcional, não bloqueia */ }
     try{
-      await store.setKeepLogged(keep);
-      signup ? await store.signUp(email,pass) : await store.signIn(email,pass);
+      signup ? await store.signUp(mail,pass) : await store.signIn(mail,pass);
       remember();
     }catch(e){ setErr(traduzErro(e.code||e.message)); }
-  };
-  const goGoogle=async()=>{
-    setErr("");
-    try{ await store.setKeepLogged(keep); await store.signInGoogle(); remember(); }
-    catch(e){ setErr(traduzErro(e.code||e.message)); }
+    setBusy(false);
   };
   return (
     <div className="auth">
@@ -1383,31 +1381,32 @@ function Auth(){
         <div className="big"><span style={{color:"var(--chalk)"}}>BROS</span><span style={{color:"var(--dotblack)"}}>.</span><span style={{color:"var(--redlao)"}}>lão</span></div>
         <div className="sub">{signup ? "Primeiro acesso · crie sua conta" : "Bem-vindo de volta"}</div>
       </div>
-      <button className="btn google" onClick={goGoogle}>
-        <svg className="gicon" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.1 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.2 13.5 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-2.8-.4-4.1H24v7.4h12.5c-.3 2.1-1.6 5.2-4.6 7.3l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16.1z"/><path fill="#FBBC05" d="M10.4 28.3c-.5-1.4-.8-2.9-.8-4.3s.3-3 .7-4.3l-7.8-6.1C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.5l7.8-6.2z"/><path fill="#34A853" d="M24 48c6.1 0 11.3-2 15-5.5l-7.1-5.5c-2 1.4-4.6 2.3-7.9 2.3-6.4 0-11.8-4-13.6-9.8l-7.8 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
-        Continuar com Google
-      </button>
-      <div className="or-div">ou</div>
       <div className="field"><label>E-mail</label>
-        <input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@email.com"/></div>
+        <input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)}
+          placeholder="voce@email.com"/></div>
       <div className="field"><label>{signup?"Crie uma senha":"Senha"}</label>
-        <input className="input" type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder={signup?"mínimo 6 caracteres":"••••••"}/></div>
+        <input className="input" type="password" value={pass} onChange={e=>setPass(e.target.value)}
+          onKeyDown={e=>{ if(e.key==="Enter") go(); }}
+          placeholder={signup?"mínimo 6 caracteres":"••••••"}/></div>
       <label className="keeprow"><input type="checkbox" checked={keep} onChange={e=>setKeep(e.target.checked)}/> Manter conectado neste aparelho</label>
       {err && <div className="banner" style={{background:"rgba(229,72,77,.1)",borderColor:"rgba(229,72,77,.3)",color:"var(--live)"}}>{err}</div>}
-      <button className="btn prim" onClick={go} style={{marginTop:4}}>{signup?"Criar conta e entrar":"Entrar"}</button>
-      <button className="btn ghost" style={{marginTop:10}} onClick={()=>setMode(signup?"in":"up")}>
+      <button className="btn prim" onClick={go} disabled={busy} style={{marginTop:4,opacity:busy?.6:1}}>
+        {busy ? "Aguarde…" : (signup?"Criar conta e entrar":"Entrar")}</button>
+      <button className="btn ghost" style={{marginTop:10}} onClick={()=>{ setErr(""); setMode(signup?"in":"up"); }}>
         {signup?"Já tenho conta · Entrar":"Primeiro acesso? Criar conta"}</button>
     </div>
   );
 }
 function traduzErro(c){
-  if(/email-already/.test(c))return "Esse e-mail já tem conta.";
-  if(/weak-password/.test(c))return "Senha muito curta (mín. 6).";
+  c = String(c||"");
+  if(/email-already/.test(c))return "Esse e-mail já tem conta. Use 'Já tenho conta · Entrar'.";
+  if(/weak-password/.test(c))return "Senha muito curta (mín. 6 caracteres).";
   if(/invalid-credential|wrong-password|user-not-found/.test(c))return "E-mail ou senha incorretos.";
   if(/invalid-email/.test(c))return "E-mail inválido.";
-  if(/popup-closed|cancelled-popup|popup-blocked/.test(c))return "Login do Google cancelado. Tente de novo.";
-  if(/unauthorized-domain/.test(c))return "Domínio não autorizado no Firebase (adicione seu domínio em Authentication → Settings).";
-  return "Não foi possível entrar. Tente de novo.";
+  if(/operation-not-allowed|configuration-not-found/.test(c))return "Login por e-mail/senha não está ativado no Firebase. Ative em Authentication → Sign-in method → Email/Password.";
+  if(/network-request-failed/.test(c))return "Falha de conexão. Verifique a internet e tente de novo.";
+  if(/too-many-requests/.test(c))return "Muitas tentativas. Aguarde um momento e tente de novo.";
+  return "Não foi possível entrar. Tente de novo. (" + c.replace("auth/","") + ")";
 }
 
 /* ============================================================
