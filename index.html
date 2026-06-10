@@ -947,7 +947,7 @@ function Home({matches, now, ranking, me, guessMap, onSave, savedId}){
   const next=sorted.filter(m=> !isStarted(m,now)).slice(0,9);
   const top3=ranking.slice(0,3);
   const topIds=new Set(top3.map(p=>p.uid));
-  const leigos = ranking.length>3 ? ranking.filter(p=>!topIds.has(p)).slice(-3) : [];
+  const leigos = ranking.length>3 ? ranking.filter(p=>!topIds.has(p.uid)).slice(-3) : [];
   const medals=["🥇","🥈","🥉"];
   return (
     <div className="wrap">
@@ -1147,10 +1147,10 @@ function Ranking({ranking, me, matches, now, guessMap, specialMap, official}){
   );
   const know=ranking.slice(0,4);
   const knowIds=new Set(know.map(p=>p.uid));
-  const rest=ranking.filter(p=>!knowIds.has(p));
+  const rest=ranking.filter(p=>!knowIds.has(p.uid));
   const lay=rest.slice(-4);
   const layIds=new Set(lay.map(p=>p.uid));
-  const middle=rest.filter(p=>!layIds.has(p));
+  const middle=rest.filter(p=>!layIds.has(p.uid));
   return (
     <div className="wrap narrow">
       <div className="zone-h know"><span className="zi">🧠</span><span className="zt">Zona dos Conhecedores</span><span className="zs">Top 4</span></div>
