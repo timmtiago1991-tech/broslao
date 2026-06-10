@@ -1430,7 +1430,8 @@ function App(){
   const [user,setUser]=useState(undefined);     // undefined=carregando, null=deslogado
   const [profile,setProfile]=useState(undefined);
   const [participants,setParticipants]=useState([]);
-  const [matches,setMatches]=useState([]);
+  const [pLoaded,setPLoaded]=useState(false);   // participantes já carregados do banco?
+  const [matches,setMatches]=useState(()=>mergeMatches([]));   // já começa com os 72 jogos-base
   const [guesses,setGuesses]=useState([]);
   const [specials,setSpecials]=useState([]);
   const [official,setOfficial]=useState({});
@@ -1442,18 +1443,20 @@ function App(){
   useEffect(()=> store.onAuth(u=> setUser(u||null)),[]);
   useEffect(()=>{ const t=setInterval(()=>setNow(Date.now()),20000); return ()=>clearInterval(t); },[]);
   useEffect(()=>{
-    const subs=[store.subParticipants(d=>setParticipants(d.map(p=>({uid:p.id||p.uid,...p})))),
+    const subs=[store.subParticipants(d=>{ setParticipants(d.map(p=>({uid:p.id||p.uid,...p}))); setPLoaded(true); }),
       store.subMatches(d=>setMatches(mergeMatches(d))), store.subGuesses(setGuesses),
       store.subSpecials(setSpecials), store.subOfficial(setOfficial)];
-    return ()=> subs.forEach(u=>u&&u());
+    const safety=setTimeout(()=>setPLoaded(true),5000); // não trava se o banco demorar
+    return ()=>{ subs.forEach(u=>u&&u()); clearTimeout(safety); };
   },[]);
 
-  // perfil do usuário atual
+  // perfil do usuário atual (só decide depois que os participantes carregarem)
   useEffect(()=>{
     if(!user){ setProfile(undefined); return; }
+    if(!pLoaded){ setProfile(undefined); return; }   // ainda carregando → não mostra cadastro à toa
     const p=participants.find(x=>x.uid===user.uid);
     setProfile(p||null);
-  },[user,participants]);
+  },[user,participants,pLoaded]);
 
   const guessMap=useMemo(()=>{const m={};guesses.forEach(g=>m[(g.uid)+"_"+(g.matchId)]=g);return m;},[guesses]);
   const specialMap=useMemo(()=>{const m={};specials.forEach(s=>m[s.uid||s.id]=s);return m;},[specials]);
@@ -1478,13 +1481,17 @@ function App(){
   const onSaveResult=(id,a,b)=>{ store.saveMatch({id,resultA:a,resultB:b}); popToast("Resultado lançado · ranking atualizado"); };
   const onSaveOfficial=(d)=>{ store.saveOfficial(d); popToast("Oficiais salvos"); };
   const onImport=()=>{ OFFICIAL_FIXTURES.forEach(f=> store.saveMatch({...f})); popToast("Tabela oficial importada · "+OFFICIAL_FIXTURES.length+" jogos"); };
+  const onProfileDone=async(d)=>{
+    try{ await store.saveProfile(me,d); }
+    catch(e){ popToast("⚠️ Não consegui salvar seu perfil. Verifique as regras do Firestore."); }
+  };
 
   if(user===undefined) return <div className="auth"><div className="hero"><span className="ballmark">⚽</span><div className="sub">Carregando…</div></div></div>;
   if(!store.demo && user===null) return <Auth/>;
   if(profile===null){
     const jaSouParticipante = participants.some(p=>p.uid===me);
     if(!jaSouParticipante && participants.length >= MAX_PLAYERS) return <PoolFull/>;
-    return <Onboarding onDone={d=>store.saveProfile(me,d)}/>;
+    return <Onboarding onDone={onProfileDone}/>;
   }
   if(profile===undefined) return <div className="auth"><div className="hero"><span className="ballmark">⚽</span><div className="sub">Carregando…</div></div></div>;
 
