@@ -363,6 +363,24 @@ a{color:var(--celeste)}
 .rules-text{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;color:var(--muted);font-size:13.5px;line-height:1.9;box-shadow:0 1px 2px rgba(20,20,20,.04)}
 .rules-text b{color:var(--chalk)}
 
+/* ---------- Home: zonas de destaque + jogos em andamento ---------- */
+.hero-zones{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:6px}
+.hero-zones .rank-hero{margin-top:2px}
+.podium.lant{border-color:rgba(229,72,77,.45)}
+.podium.lant .pos{color:var(--live)}
+@media(max-width:760px){ .hero-zones{grid-template-columns:1fr} }
+
+.livecard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;
+  box-shadow:0 1px 2px rgba(20,20,20,.04);position:relative;overflow:hidden}
+.livecard.on{border-color:rgba(229,72,77,.4)}
+.lc-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+.lc-title{font-family:'Archivo';font-weight:900;font-size:17px;letter-spacing:.02em}
+.lc-rows{display:flex;flex-direction:column}
+.lc-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:14px}
+.lc-row .nk{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lc-row .pl{font-family:'Archivo';font-weight:800;font-variant-numeric:tabular-nums;margin-left:10px}
+.lc-row .pl.none{color:var(--muted-2);font-family:'Inter';font-weight:600}
+
 </style>
 </head>
 <body>
@@ -889,34 +907,73 @@ function flagEmoji(team){
 }
 
 /* ---------- HOME ---------- */
+function PodiumCard({p, rank, total, medal, lant}){
+  return (
+    <div className={"podium"+(rank===1?" p1":"")+(lant?" lant":"")}>
+      <div className="pos">{medal} {rank}º</div>
+      <div style={{display:"flex",justifyContent:"center",margin:"8px 0 2px"}}><Avatar avatar={p.avatar} size={40}/></div>
+      <div className="nick">{p.nickname}</div>
+      <div className="tp num">{p.total}</div>
+    </div>
+  );
+}
+
+function LiveGuessCard({m, people, guessMap}){
+  const list=[...people]
+    .map(p=>({nick:p.nickname, g:guessMap[p.uid+"_"+m.id]}))
+    .sort((a,b)=> a.nick.localeCompare(b.nick,"pt"));
+  return (
+    <div className="livecard on">
+      <div className="lc-head">
+        <span className="lc-title">{teamInfo(m.teamA).c} × {teamInfo(m.teamB).c}</span>
+        <span className="status live"><span className="d"></span>Em andamento</span>
+      </div>
+      <div className="lc-rows">
+        {list.map((x,i)=>(
+          <div className="lc-row" key={i}>
+            <span className="nk">{x.nick}</span>
+            <span className={"pl"+(x.g?"":" none")}>{x.g ? x.g.a+" - "+x.g.b : "—"}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Home({matches, now, ranking, me, guessMap, onSave, savedId}){
   const sorted=[...matches].sort((x,y)=> new Date(x.kickoffISO)-new Date(y.kickoffISO));
   const live=sorted.filter(m=> isStarted(m,now) && m.resultA==null);
   const next=sorted.filter(m=> !isStarted(m,now)).slice(0,9);
   const top3=ranking.slice(0,3);
+  const topIds=new Set(top3.map(p=>p.uid));
+  const leigos = ranking.length>3 ? ranking.filter(p=>!topIds.has(p)).slice(-3) : [];
+  const medals=["🥇","🥈","🥉"];
   return (
     <div className="wrap">
       {top3.length>0 &&
-        <>
-          <div className="sect-h"><h2>Pódio</h2><span className="note">{ranking.length}/{MAX_PLAYERS} no bolão</span></div>
-          <div className="rank-hero">
-            {top3.map((p,i)=>(
-              <div key={p.uid} className={"podium "+(i===0?"p1":"")}>
-                <div className="pos">{["🥇","🥈","🥉"][i]} {i+1}º</div>
-                <div style={{display:"flex",justifyContent:"center",margin:"8px 0 2px"}}><Avatar avatar={p.avatar} size={40}/></div>
-                <div className="nick">{p.nickname}</div>
-                <div className="tp num">{p.total}</div>
-              </div>
-            ))}
+        <div className="hero-zones">
+          <div>
+            <div className="zone-h know"><span className="zi">🧠</span><span className="zt">Os Grandes Conhecedores</span><span className="zs">{ranking.length}/{MAX_PLAYERS}</span></div>
+            <div className="rank-hero">
+              {top3.map((p,i)=><PodiumCard key={p.uid} p={p} rank={i+1} medal={medals[i]}/>)}
+            </div>
           </div>
-        </>}
+          {leigos.length>0 &&
+            <div>
+              <div className="zone-h lay"><span className="zi">🙈</span><span className="zt">Os Grandes Leigos</span></div>
+              <div className="rank-hero">
+                {leigos.map((p)=>{ const rank=ranking.indexOf(p)+1;
+                  return <PodiumCard key={p.uid} p={p} rank={rank} medal={"🔻"} lant={rank===ranking.length}/>;})}
+              </div>
+            </div>}
+        </div>}
 
-      {live.length>0 && <>
-        <div className="sect-h"><h2>Acontecendo agora</h2></div>
-        <div className="matchgrid">
-          {live.map(m=><MatchCard key={m.id} m={m} now={now} guess={guessMap[me+"_"+m.id]} editable={false}/>)}
-        </div>
-      </>}
+      <div className="sect-h"><h2>Jogos em andamento</h2></div>
+      {live.length
+        ? <div className="matchgrid">
+            {live.map(m=><LiveGuessCard key={m.id} m={m} people={ranking} guessMap={guessMap}/>)}
+          </div>
+        : <div className="empty">Nenhum jogo rolando neste momento. Os palpites de cada um aparecem aqui assim que a bola rolar.</div>}
 
       <div className="sect-h"><h2>Próximos jogos</h2></div>
       {next.length
