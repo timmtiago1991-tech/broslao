@@ -1331,8 +1331,16 @@ function CafuArt(){
 function Onboarding({onDone}){
   const [nick,setNick]=useState("");
   const [av,setAv]=useState({sex:"h",hair:"curto",hairColor:"preto",shirt:"brasil"});
+  const [busy,setBusy]=useState(false);
+  const [err,setErr]=useState("");
   const Opt=({on,cel,children,onClick})=>(
     <button className={"opt"+(on?" on":"")+(on&&cel?" cel":"")} onClick={onClick}>{children}</button>);
+  const confirm=async()=>{
+    if(!nick.trim()||busy) return;
+    setErr(""); setBusy(true);
+    try{ await onDone({nickname:nick.trim(),avatar:av}); /* sucesso → o app troca de tela sozinho */ }
+    catch(e){ setErr("Não consegui salvar seu perfil. Verifique a conexão e tente de novo."); setBusy(false); }
+  };
   return (
     <div className="welcome">
       <div className="welcome-left">
@@ -1360,8 +1368,9 @@ function Onboarding({onDone}){
           <div className="field"><label>Camisa</label><div className="opts">
             <Opt on={av.shirt==="brasil"} onClick={()=>setAv({...av,shirt:"brasil"})}>🇧🇷 Brasil</Opt>
             <Opt on={av.shirt==="argentina"} cel onClick={()=>setAv({...av,shirt:"argentina"})}>🇦🇷 Argentina</Opt></div></div>
-          <button className="btn prim" disabled={!nick.trim()} style={{opacity:nick.trim()?1:.5,marginTop:6}}
-            onClick={()=>onDone({nickname:nick.trim(),avatar:av})}>Confirmar e entrar</button>
+          {err && <div className="banner" style={{background:"rgba(229,72,77,.1)",borderColor:"rgba(229,72,77,.3)",color:"var(--live)"}}>{err}</div>}
+          <button className="btn prim" disabled={!nick.trim()||busy} style={{opacity:(!nick.trim()||busy)?.5:1,marginTop:6}}
+            onClick={confirm}>{busy?"Salvando…":"Confirmar e entrar"}</button>
         </div>
       </div>
     </div>
@@ -1481,10 +1490,7 @@ function App(){
   const onSaveResult=(id,a,b)=>{ store.saveMatch({id,resultA:a,resultB:b}); popToast("Resultado lançado · ranking atualizado"); };
   const onSaveOfficial=(d)=>{ store.saveOfficial(d); popToast("Oficiais salvos"); };
   const onImport=()=>{ OFFICIAL_FIXTURES.forEach(f=> store.saveMatch({...f})); popToast("Tabela oficial importada · "+OFFICIAL_FIXTURES.length+" jogos"); };
-  const onProfileDone=async(d)=>{
-    try{ await store.saveProfile(me,d); }
-    catch(e){ popToast("⚠️ Não consegui salvar seu perfil. Verifique as regras do Firestore."); }
-  };
+  const onProfileDone=(d)=> store.saveProfile(me,d);
 
   if(user===undefined) return <div className="auth"><div className="hero"><span className="ballmark">⚽</span><div className="sub">Carregando…</div></div></div>;
   if(!store.demo && user===null) return <Auth/>;
