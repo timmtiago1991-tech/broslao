@@ -459,6 +459,20 @@ const VENUES = {
 const teamInfo = (name)=> TEAMS[name] || {c:(name||"").slice(0,3).toUpperCase(), iso:null};
 const ALL_TEAMS = Object.keys(TEAMS).sort((a,b)=>a.localeCompare(b,"pt"));
 
+// Jogos-base da fase de grupos (definidos no código, ids estáveis g0..g71).
+// Sempre aparecem; o Firestore guarda só os resultados (e jogos de mata-mata adicionados).
+const BASE_MATCHES = OFFICIAL_FIXTURES.map((f,i)=>({...f, id:"g"+i}));
+
+// Mescla os jogos-base com os documentos do banco (resultados sobrescrevem; novos jogos são adicionados).
+function mergeMatches(remote){
+  const byId={};
+  BASE_MATCHES.forEach(m=>{ byId[m.id]={...m}; });
+  (remote||[]).forEach(r=>{
+    byId[r.id] = byId[r.id] ? {...byId[r.id], ...r} : r;
+  });
+  return Object.values(byId);
+}
+
 /* ============================================================
    2. CONSTANTES DO TORNEIO
    ============================================================ */
@@ -1429,7 +1443,7 @@ function App(){
   useEffect(()=>{ const t=setInterval(()=>setNow(Date.now()),20000); return ()=>clearInterval(t); },[]);
   useEffect(()=>{
     const subs=[store.subParticipants(d=>setParticipants(d.map(p=>({uid:p.id||p.uid,...p})))),
-      store.subMatches(setMatches), store.subGuesses(setGuesses),
+      store.subMatches(d=>setMatches(mergeMatches(d))), store.subGuesses(setGuesses),
       store.subSpecials(setSpecials), store.subOfficial(setOfficial)];
     return ()=> subs.forEach(u=>u&&u());
   },[]);
@@ -1451,8 +1465,14 @@ function App(){
   const flash=(id)=>{ setSavedId(id); setTimeout(()=>setSavedId(s=>s===id?null:s),1600); };
   const popToast=(t)=>{ setToast(t); setTimeout(()=>setToast(""),2200); };
 
-  const onSaveGuess=(mId,g)=>{ store.saveGuess(me,mId,g); flash(mId); };
-  const onSaveSpecial=(d)=> store.saveSpecials(me,d);
+  const onSaveGuess=async(mId,g)=>{
+    try{ await store.saveGuess(me,mId,g); flash(mId); }
+    catch(e){ popToast("⚠️ Não consegui salvar o palpite. Verifique a conexão."); }
+  };
+  const onSaveSpecial=async(d)=>{
+    try{ await store.saveSpecials(me,d); }
+    catch(e){ popToast("⚠️ Não consegui salvar. Tente de novo."); }
+  };
   const onSaveMatch=(m)=>{ store.saveMatch(m); popToast("Jogo salvo"); };
   const onDeleteMatch=(id)=>{ store.deleteMatch(id); popToast("Jogo excluído"); };
   const onSaveResult=(id,a,b)=>{ store.saveMatch({id,resultA:a,resultB:b}); popToast("Resultado lançado · ranking atualizado"); };
