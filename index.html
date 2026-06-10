@@ -272,6 +272,48 @@ a{color:var(--celeste)}
 .fsel-opt:hover{background:var(--surface-2)}
 .fsel-opt.on{background:var(--blue-soft);color:var(--blue)}
 
+/* ---------- Login / Google ---------- */
+.btn.google{background:#fff;color:#1f2533;border:1px solid var(--line);gap:10px}
+.btn.google:hover{background:var(--surface-2)}
+.or-div{display:flex;align-items:center;gap:12px;color:var(--muted-2);font-size:12px;font-weight:700;margin:14px 0}
+.or-div::before,.or-div::after{content:"";height:1px;background:var(--line);flex:1}
+.gicon{width:18px;height:18px;flex:none}
+.keeprow{display:flex;align-items:center;gap:9px;font-size:13.5px;color:var(--muted);font-weight:600;margin:2px 2px 14px;cursor:pointer}
+.keeprow input{width:16px;height:16px;accent-color:var(--blue)}
+
+/* ---------- Welcome screen ---------- */
+.welcome{display:grid;grid-template-columns:1.1fr .9fr;min-height:100vh}
+.welcome-left{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 36px;background:radial-gradient(120% 120% at 30% 10%, #12a655 0%, #0a6e37 55%, #064d28 100%)}
+.welcome-left .wart{width:min(340px,70%);filter:drop-shadow(0 18px 40px rgba(0,0,0,.35));position:relative;z-index:2}
+.welcome-left .wtitle{position:relative;z-index:2;text-align:center;color:#fff;font-family:'Archivo';font-weight:900;
+  font-size:34px;line-height:1.05;margin-top:26px;text-shadow:0 2px 14px rgba(0,0,0,.25)}
+.welcome-left .wtitle .y{color:var(--canarinho)} .welcome-left .wtitle .r{color:#ff6a78}
+.welcome-left .wsub{position:relative;z-index:2;color:rgba(255,255,255,.85);font-weight:600;margin-top:10px;font-size:14px}
+.welcome-right{display:flex;align-items:center;justify-content:center;padding:40px 32px;background:var(--surface);
+  opacity:0;transform:translateX(28px);animation:rightIn .6s ease .35s forwards}
+@keyframes rightIn{to{opacity:1;transform:none}}
+.welcome-card{width:100%;max-width:430px}
+.welcome-card .eyebrow{font-size:12px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--blue)}
+.welcome-card h2{font-family:'Archivo';font-weight:900;font-size:26px;margin:6px 0 4px}
+.welcome-card .csub{color:var(--muted);font-size:14px;margin-bottom:20px}
+.av-preview{display:flex;justify-content:center;margin:6px 0 18px}
+@media(max-width:820px){
+  .welcome{grid-template-columns:1fr}
+  .welcome-left{min-height:300px;padding:36px 24px}
+  .welcome-left .wtitle{font-size:26px}
+  .welcome-right{animation-delay:.15s}
+}
+
+/* ---------- Confetti ---------- */
+.confetti{position:absolute;top:0;left:0;bottom:0;width:55%;overflow:hidden;pointer-events:none;z-index:1}
+.conf{position:absolute;top:-24px;width:9px;height:14px;border-radius:2px;opacity:0;animation:confFall linear infinite}
+@keyframes confFall{
+  0%{transform:translateY(-24px) rotate(0deg);opacity:0}
+  8%{opacity:1}
+  100%{transform:translateY(105vh) rotate(680deg);opacity:.9}
+}
+
 </style>
 </head>
 <body>
@@ -293,6 +335,10 @@ const firebaseConfig = {
 };
 // e-mails que terão acesso ao painel Admin (curadores)
 const ADMIN_EMAILS = ["seuemail@exemplo.com"];
+
+// (opcional) URL de uma imagem própria para a tela de boas-vindas.
+// Deixe "" para usar a ilustração comemorativa embutida.
+const WELCOME_IMAGE = "";
 
 // Abertura da Copa (México × África do Sul) — fuso BRT. Especiais travam 5 min antes disto.
 const OPENING_KICKOFF = "2026-06-11T16:00:00-03:00";
@@ -582,8 +628,12 @@ function makeFirebaseStore(){
   return {
     demo:false,
     onAuth:(cb)=> auth.onAuthStateChanged(cb),
+    setKeepLogged:(keep)=> auth.setPersistence(keep
+      ? firebase.auth.Auth.Persistence.LOCAL
+      : firebase.auth.Auth.Persistence.SESSION),
     signUp:(e,p)=> auth.createUserWithEmailAndPassword(e,p),
     signIn:(e,p)=> auth.signInWithEmailAndPassword(e,p),
+    signInGoogle:()=> auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()),
     signOut:()=> auth.signOut(),
     subParticipants:(cb)=> sub("participants",cb),
     subMatches:(cb)=> sub("matches",cb),
@@ -609,7 +659,6 @@ function makeDemoStore(){
   const iso=(min)=> new Date(now+min*60000).toISOString();
   const state={
     participants:[
-      {uid:"demo", nickname:"Você (demo)", avatar:{sex:"h",hair:"curto",hairColor:"preto",shirt:"brasil"}},
       {uid:"u2", nickname:"Zé Ringa", avatar:{sex:"h",hair:"careca",hairColor:"preto",shirt:"argentina"}},
       {uid:"u3", nickname:"Duda", avatar:{sex:"m",hair:"longo",hairColor:"loiro",shirt:"brasil"}},
     ],
@@ -631,6 +680,7 @@ function makeDemoStore(){
   return {
     demo:true,
     onAuth:(cb)=> cb({uid:"demo",email:"demo@local"}),
+    setKeepLogged:()=>Promise.resolve(),
     signOut:()=>{},
     subParticipants:(cb)=>{listeners.participants.push(cb);cb(clone(state.participants));return ()=>{};},
     subMatches:(cb)=>{listeners.matches.push(cb);cb(clone(state.matches));return ()=>{};},
@@ -1199,31 +1249,107 @@ function PoolFull(){
   );
 }
 
+function Confetti({n=34}){
+  const colors=["#FFD400","#FFE45C","#0E8C46","#16B36A","#FFC72C","#0a6e37"];
+  const pieces=useMemo(()=> Array.from({length:n},(_,i)=>({
+    left: Math.random()*52,
+    delay: -Math.random()*6,
+    dur: 3.4+Math.random()*3.2,
+    bg: colors[i%colors.length],
+    w: 7+Math.random()*6,
+    h: 10+Math.random()*8,
+    round: Math.random()>.6,
+  })),[n]);
+  return (
+    <div className="confetti">
+      {pieces.map((p,i)=>(
+        <span key={i} className="conf" style={{
+          left:p.left+"%", background:p.bg, width:p.w, height:p.h,
+          borderRadius:p.round?"50%":"2px",
+          animationDuration:p.dur+"s", animationDelay:p.delay+"s",
+        }}/>
+      ))}
+    </div>
+  );
+}
+
+function CafuArt(){
+  if(WELCOME_IMAGE) return <img className="wart" src={WELCOME_IMAGE} alt="Comemoração"/>;
+  return (
+    <svg className="wart" viewBox="0 0 320 340" xmlns="http://www.w3.org/2000/svg">
+      {/* raios */}
+      <g opacity="0.5">
+        {Array.from({length:14}).map((_,i)=>{
+          const a=(i/14)*Math.PI*2, x=160+Math.cos(a)*240, y=90+Math.sin(a)*240;
+          return <line key={i} x1="160" y1="90" x2={x} y2={y} stroke="#FFD400" strokeWidth="7" opacity="0.35"/>;
+        })}
+      </g>
+      <circle cx="160" cy="90" r="58" fill="#FFD400" opacity="0.25"/>
+      {/* taça */}
+      <g>
+        <path d="M132 40 h56 v10 c0 26 -12 44 -28 44 c-16 0 -28 -18 -28 -44 z" fill="#F4C430"/>
+        <path d="M132 46 c-16 2 -20 -14 -10 -20 c6 -4 12 -1 14 4" fill="none" stroke="#F4C430" strokeWidth="6" strokeLinecap="round"/>
+        <path d="M188 46 c16 2 20 -14 10 -20 c-6 -4 -12 -1 -14 4" fill="none" stroke="#F4C430" strokeWidth="6" strokeLinecap="round"/>
+        <rect x="153" y="92" width="14" height="20" fill="#E0A92A"/>
+        <path d="M138 112 h44 l-6 14 h-32 z" fill="#F4C430"/>
+        <ellipse cx="160" cy="56" rx="22" ry="7" fill="#FFE680" opacity="0.7"/>
+      </g>
+      {/* jogador */}
+      <g>
+        {/* braços erguidos até a taça */}
+        <path d="M120 150 C128 124 146 120 158 124" fill="none" stroke="#E8B58C" strokeWidth="13" strokeLinecap="round"/>
+        <path d="M200 150 C192 124 174 120 162 124" fill="none" stroke="#E8B58C" strokeWidth="13" strokeLinecap="round"/>
+        {/* cabeça */}
+        <circle cx="160" cy="158" r="22" fill="#E8B58C"/>
+        <path d="M140 150 c2 -16 38 -16 40 0 c-8 -7 -32 -7 -40 0 z" fill="#23211F"/>
+        {/* tronco - camisa amarela */}
+        <path d="M126 196 C126 178 142 172 160 172 C178 172 194 178 194 196 L198 270 L122 270 Z" fill="#FFCE2E"/>
+        <path d="M150 172 c3 8 17 8 20 0 l6 6 c-6 12 -26 12 -32 0 z" fill="#0E8C46"/>
+        <text x="160" y="236" textAnchor="middle" fontFamily="Archivo" fontWeight="900" fontSize="30" fill="#0E8C46">10</text>
+        {/* shorts azul + pernas */}
+        <path d="M122 270 h76 l-4 30 h-26 l-4 -16 -4 16 h-26 z" fill="#1E50A0"/>
+        <rect x="132" y="300" width="14" height="34" rx="6" fill="#E8B58C"/>
+        <rect x="174" y="300" width="14" height="34" rx="6" fill="#E8B58C"/>
+      </g>
+    </svg>
+  );
+}
+
 function Onboarding({onDone}){
   const [nick,setNick]=useState("");
   const [av,setAv]=useState({sex:"h",hair:"curto",hairColor:"preto",shirt:"brasil"});
   const Opt=({on,cel,children,onClick})=>(
     <button className={"opt"+(on?" on":"")+(on&&cel?" cel":"")} onClick={onClick}>{children}</button>);
   return (
-    <div className="overlay" style={{alignItems:"center"}}>
-      <div className="sheet" style={{borderRadius:18,maxWidth:480,margin:"0 12px"}}>
-        <h2>Monte seu jogador</h2>
-        <div style={{display:"flex",justifyContent:"center",marginBottom:16}}><Avatar avatar={av} size={96}/></div>
-        <div className="field"><label>Apelido</label>
-          <input className="input" value={nick} maxLength={16} onChange={e=>setNick(e.target.value)} placeholder="ex.: Craque10"/></div>
-        <div className="field"><label>Sexo</label><div className="opts">
-          <Opt on={av.sex==="h"} onClick={()=>setAv({...av,sex:"h"})}>Homem</Opt>
-          <Opt on={av.sex==="m"} onClick={()=>setAv({...av,sex:"m"})}>Mulher</Opt></div></div>
-        <div className="field"><label>Cabelo</label><div className="opts">
-          {["longo","curto","careca"].map(h=><Opt key={h} on={av.hair===h} onClick={()=>setAv({...av,hair:h})}>{h}</Opt>)}</div></div>
-        <div className="field"><label>Cor do cabelo</label><div className="opts">
-          <Opt on={av.hairColor==="preto"} onClick={()=>setAv({...av,hairColor:"preto"})}>Preto</Opt>
-          <Opt on={av.hairColor==="loiro"} onClick={()=>setAv({...av,hairColor:"loiro"})}>Loiro</Opt></div></div>
-        <div className="field"><label>Camisa</label><div className="opts">
-          <Opt on={av.shirt==="brasil"} onClick={()=>setAv({...av,shirt:"brasil"})}>🇧🇷 Brasil</Opt>
-          <Opt on={av.shirt==="argentina"} cel onClick={()=>setAv({...av,shirt:"argentina"})}>🇦🇷 Argentina</Opt></div></div>
-        <button className="btn prim" disabled={!nick.trim()} style={{opacity:nick.trim()?1:.5}}
-          onClick={()=>onDone({nickname:nick.trim(),avatar:av})}>Entrar no bolão</button>
+    <div className="welcome">
+      <div className="welcome-left">
+        <Confetti/>
+        <CafuArt/>
+        <div className="wtitle">Bem-Vindo ao <span className="r">BROS</span>.<span className="y">lão</span> da Copa</div>
+        <div className="wsub">Hexa é o destino. Bora cravar os placares! 🇧🇷</div>
+      </div>
+      <div className="welcome-right">
+        <div className="welcome-card">
+          <div className="eyebrow">Quase lá</div>
+          <h2>Crie seu jogador</h2>
+          <div className="csub">Escolha seu avatar e um apelido para entrar na disputa.</div>
+          <div className="av-preview"><Avatar avatar={av} size={104}/></div>
+          <div className="field"><label>Apelido</label>
+            <input className="input" value={nick} maxLength={16} onChange={e=>setNick(e.target.value)} placeholder="ex.: Craque10"/></div>
+          <div className="field"><label>Sexo</label><div className="opts">
+            <Opt on={av.sex==="h"} onClick={()=>setAv({...av,sex:"h"})}>Homem</Opt>
+            <Opt on={av.sex==="m"} onClick={()=>setAv({...av,sex:"m"})}>Mulher</Opt></div></div>
+          <div className="field"><label>Cabelo</label><div className="opts">
+            {["longo","curto","careca"].map(h=><Opt key={h} on={av.hair===h} onClick={()=>setAv({...av,hair:h})}>{h}</Opt>)}</div></div>
+          <div className="field"><label>Cor do cabelo</label><div className="opts">
+            <Opt on={av.hairColor==="preto"} onClick={()=>setAv({...av,hairColor:"preto"})}>Preto</Opt>
+            <Opt on={av.hairColor==="loiro"} onClick={()=>setAv({...av,hairColor:"loiro"})}>Loiro</Opt></div></div>
+          <div className="field"><label>Camisa</label><div className="opts">
+            <Opt on={av.shirt==="brasil"} onClick={()=>setAv({...av,shirt:"brasil"})}>🇧🇷 Brasil</Opt>
+            <Opt on={av.shirt==="argentina"} cel onClick={()=>setAv({...av,shirt:"argentina"})}>🇦🇷 Argentina</Opt></div></div>
+          <button className="btn prim" disabled={!nick.trim()} style={{opacity:nick.trim()?1:.5,marginTop:6}}
+            onClick={()=>onDone({nickname:nick.trim(),avatar:av})}>Confirmar e entrar</button>
+        </div>
       </div>
     </div>
   );
@@ -1231,11 +1357,23 @@ function Onboarding({onDone}){
 
 /* ---------- AUTH (modo real) ---------- */
 function Auth(){
-  const [mode,setMode]=useState("in");
+  const seen = (()=>{ try{ return !!localStorage.getItem("broslao_acct"); }catch(e){ return false; } })();
+  const [mode,setMode]=useState(seen ? "in" : "up");   // máquina nova → criar conta
   const [email,setEmail]=useState(""); const [pass,setPass]=useState(""); const [err,setErr]=useState("");
+  const [keep,setKeep]=useState(true);
+  const remember=()=>{ try{ localStorage.setItem("broslao_acct","1"); }catch(e){} };
+  const signup = mode==="up";
   const go=async()=>{
     setErr("");
-    try{ mode==="in"? await store.signIn(email,pass) : await store.signUp(email,pass); }
+    try{
+      await store.setKeepLogged(keep);
+      signup ? await store.signUp(email,pass) : await store.signIn(email,pass);
+      remember();
+    }catch(e){ setErr(traduzErro(e.code||e.message)); }
+  };
+  const goGoogle=async()=>{
+    setErr("");
+    try{ await store.setKeepLogged(keep); await store.signInGoogle(); remember(); }
     catch(e){ setErr(traduzErro(e.code||e.message)); }
   };
   return (
@@ -1243,16 +1381,22 @@ function Auth(){
       <div className="hero">
         <span className="ballmark">⚽</span>
         <div className="big"><span style={{color:"var(--chalk)"}}>BROS</span><span style={{color:"var(--dotblack)"}}>.</span><span style={{color:"var(--redlao)"}}>lão</span></div>
-        <div className="sub">Bolão privado · Copa do Mundo 2026</div>
+        <div className="sub">{signup ? "Primeiro acesso · crie sua conta" : "Bem-vindo de volta"}</div>
       </div>
+      <button className="btn google" onClick={goGoogle}>
+        <svg className="gicon" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.1 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.2 13.5 17.6 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-2.8-.4-4.1H24v7.4h12.5c-.3 2.1-1.6 5.2-4.6 7.3l7.1 5.5c4.2-3.9 6.6-9.6 6.6-16.1z"/><path fill="#FBBC05" d="M10.4 28.3c-.5-1.4-.8-2.9-.8-4.3s.3-3 .7-4.3l-7.8-6.1C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.5l7.8-6.2z"/><path fill="#34A853" d="M24 48c6.1 0 11.3-2 15-5.5l-7.1-5.5c-2 1.4-4.6 2.3-7.9 2.3-6.4 0-11.8-4-13.6-9.8l-7.8 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+        Continuar com Google
+      </button>
+      <div className="or-div">ou</div>
       <div className="field"><label>E-mail</label>
         <input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="voce@email.com"/></div>
-      <div className="field"><label>Senha</label>
-        <input className="input" type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder="••••••"/></div>
-      {err && <div className="banner" style={{background:"rgba(255,93,93,.1)",borderColor:"rgba(255,93,93,.3)",color:"var(--live)"}}>{err}</div>}
-      <button className="btn prim" onClick={go} style={{marginTop:4}}>{mode==="in"?"Entrar":"Criar conta"}</button>
-      <button className="btn ghost" style={{marginTop:10}} onClick={()=>setMode(mode==="in"?"up":"in")}>
-        {mode==="in"?"Não tem conta? Cadastre-se":"Já tenho conta · Entrar"}</button>
+      <div className="field"><label>{signup?"Crie uma senha":"Senha"}</label>
+        <input className="input" type="password" value={pass} onChange={e=>setPass(e.target.value)} placeholder={signup?"mínimo 6 caracteres":"••••••"}/></div>
+      <label className="keeprow"><input type="checkbox" checked={keep} onChange={e=>setKeep(e.target.checked)}/> Manter conectado neste aparelho</label>
+      {err && <div className="banner" style={{background:"rgba(229,72,77,.1)",borderColor:"rgba(229,72,77,.3)",color:"var(--live)"}}>{err}</div>}
+      <button className="btn prim" onClick={go} style={{marginTop:4}}>{signup?"Criar conta e entrar":"Entrar"}</button>
+      <button className="btn ghost" style={{marginTop:10}} onClick={()=>setMode(signup?"in":"up")}>
+        {signup?"Já tenho conta · Entrar":"Primeiro acesso? Criar conta"}</button>
     </div>
   );
 }
@@ -1261,6 +1405,8 @@ function traduzErro(c){
   if(/weak-password/.test(c))return "Senha muito curta (mín. 6).";
   if(/invalid-credential|wrong-password|user-not-found/.test(c))return "E-mail ou senha incorretos.";
   if(/invalid-email/.test(c))return "E-mail inválido.";
+  if(/popup-closed|cancelled-popup|popup-blocked/.test(c))return "Login do Google cancelado. Tente de novo.";
+  if(/unauthorized-domain/.test(c))return "Domínio não autorizado no Firebase (adicione seu domínio em Authentication → Settings).";
   return "Não foi possível entrar. Tente de novo.";
 }
 
