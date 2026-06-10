@@ -157,6 +157,7 @@ a{color:var(--celeste)}
 .zone-h .zs{margin-left:auto;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .zone-h.know .zt{color:var(--green)}
 .zone-h.lay .zt{color:var(--live)}
+.zone-h.mid .zt{color:var(--muted)}
 .card.know{background:rgba(22,163,74,.09);border-color:rgba(22,163,74,.30)}
 .card.lay{background:rgba(229,72,77,.08);border-color:rgba(229,72,77,.30)}
 .card.know .rrow,.card.lay .rrow{border-bottom-color:rgba(20,20,20,.07)}
@@ -1145,18 +1146,29 @@ function Ranking({ranking, me, matches, now, guessMap, specialMap, official}){
     </div>
   );
   const know=ranking.slice(0,4);
-  const lay=ranking.slice(4);
+  const knowIds=new Set(know.map(p=>p.uid));
+  const rest=ranking.filter(p=>!knowIds.has(p));
+  const lay=rest.slice(-4);
+  const layIds=new Set(lay.map(p=>p.uid));
+  const middle=rest.filter(p=>!layIds.has(p));
   return (
     <div className="wrap narrow">
       <div className="zone-h know"><span className="zi">🧠</span><span className="zt">Zona dos Conhecedores</span><span className="zs">Top 4</span></div>
       <div className="card know">
-        {know.length ? know.map((p,i)=>Row(p,i)) : <div className="rrow"><span className="sub">Ainda sem participantes.</span></div>}
+        {know.length ? know.map(p=>Row(p,ranking.indexOf(p))) : <div className="rrow"><span className="sub">Ainda sem participantes.</span></div>}
       </div>
 
+      {middle.length>0 && <>
+        <div className="zone-h mid"><span className="zi">⚽</span><span className="zt">Meio de tabela</span></div>
+        <div className="card">
+          {middle.map(p=>Row(p,ranking.indexOf(p)))}
+        </div>
+      </>}
+
       {lay.length>0 && <>
-        <div className="zone-h lay"><span className="zi">🙈</span><span className="zt">Zona dos Leigos</span><span className="zs">5º em diante</span></div>
+        <div className="zone-h lay"><span className="zi">🙈</span><span className="zt">Zona dos Leigos</span><span className="zs">Últimos 4</span></div>
         <div className="card lay">
-          {lay.map((p,i)=>Row(p,i+4))}
+          {lay.map(p=>Row(p,ranking.indexOf(p)))}
         </div>
       </>}
 
