@@ -382,6 +382,22 @@ a{color:var(--celeste)}
 .lc-row .pl{font-family:'Archivo';font-weight:800;font-variant-numeric:tabular-nums;margin-left:10px}
 .lc-row .pl.none{color:var(--muted-2);font-family:'Inter';font-weight:600}
 
+/* ---------- Quadro de especiais (scroll horizontal) ---------- */
+.sboard-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface);box-shadow:0 1px 2px rgba(20,20,20,.04);-webkit-overflow-scrolling:touch}
+.sboard{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%;font-size:13px}
+.sboard th,.sboard td{padding:10px 13px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);white-space:nowrap;text-align:center}
+.sboard tr:last-child td{border-bottom:none}
+.sboard th:last-child,.sboard td:last-child{border-right:none}
+.sboard thead th{position:sticky;top:0;z-index:3;background:var(--surface-2);font-family:'Archivo';font-weight:800;font-size:12.5px}
+.sboard thead th.you{color:var(--blue)}
+.sboard td.rowh,.sboard th.corner{position:sticky;left:0;background:var(--surface);text-align:left;font-family:'Archivo';font-weight:800;font-size:12.5px}
+.sboard td.rowh{z-index:2;min-width:140px}
+.sboard th.corner{z-index:5;background:var(--surface-2);text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-size:11px}
+.sboard td.val{font-weight:600;min-width:120px}
+.sboard td.val.empty{color:var(--muted-2);font-weight:500}
+.sboard td.you-col{background:rgba(37,99,235,.05)}
+.sboard .cellflag{display:inline-flex;align-items:center;gap:7px;justify-content:center}
+
 </style>
 </head>
 <body>
@@ -403,7 +419,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com"];
-const BUILD = "v6 · ranking corrigido";
+const BUILD = "v7 · aba especiais";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -1568,6 +1584,65 @@ function Regras(){
   );
 }
 
+/* ---------- ESPECIAIS DE TODOS (quadro) ---------- */
+function SpecialsBoard({participants, specialMap, matches, now, me}){
+  const firstKick = matches.length ? Math.min(...matches.map(m=>new Date(m.kickoffISO).getTime())) : Infinity;
+  const revealed = now >= firstKick;
+  const groups=[...new Set(matches.filter(m=>m.phase==="grupos"&&m.group).map(m=>m.group))].sort();
+  const cols=[...participants].sort((a,b)=> a.nickname.localeCompare(b.nickname,"pt"));
+  const rows=[
+    ...SPECIAL_DEFS.map(s=>({key:s.key, label:s.label.split(" · ")[0], ic:s.ic, country:(s.key==="champion"||s.key==="runnerUp")})),
+    ...groups.map(g=>({key:"L"+g, leader:g, label:"Líder "+g, ic:"🥇", country:true})),
+  ];
+  const cellVal=(p,row)=>{ const sp=specialMap[p.uid]||{};
+    return row.leader ? ((sp.leaders||{})[row.leader]||"") : (sp[row.key]||""); };
+
+  if(!revealed){
+    return (
+      <div className="wrap narrow">
+        <div className="rules-hero"><BallArt size={60}/>
+          <div><div className="rt">Especiais de todos</div>
+            <div className="rs">Revelados quando a bola rolar no primeiro jogo.</div></div></div>
+        <div className="empty">🔒 Os palpites especiais de todo mundo ficam visíveis a partir do <b>início do primeiro jogo</b>
+          {firstKick<Infinity ? " ("+fmtBRT(new Date(firstKick).toISOString())+" BRT)" : ""}.
+          <br/>Até lá, cada um enxerga apenas os seus, na aba Palpites.</div>
+      </div>
+    );
+  }
+  return (
+    <div className="wrap">
+      <div className="sect-h"><h2>Palpites especiais de todos</h2><span className="note">{cols.length} participantes</span></div>
+      <div className="sboard-wrap">
+        <table className="sboard">
+          <thead>
+            <tr>
+              <th className="corner">Palpite</th>
+              {cols.map(p=><th key={p.uid} className={p.uid===me?"you":""}>{p.nickname}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(row=>(
+              <tr key={row.key}>
+                <td className="rowh">{row.ic} {row.label}</td>
+                {cols.map(p=>{ const v=cellVal(p,row);
+                  return (
+                    <td key={p.uid} className={"val"+(v?"":" empty")+(p.uid===me?" you-col":"")}>
+                      {v ? (row.country ? <span className="cellflag"><Flag name={v}/> {v}</span> : v) : "—"}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="legend" style={{marginTop:12}}>
+        Mostra o que cada um cravou. Os pontos dos especiais entram no ranking quando o curador lançar os resultados oficiais.
+      </div>
+    </div>
+  );
+}
+
 /* ---------- AUTH (modo real) ---------- */
 function Auth(){
   const seen = (()=>{ try{ return !!localStorage.getItem("broslao_acct"); }catch(e){ return false; } })();
@@ -1713,6 +1788,7 @@ function App(){
           <button className={"navlink"+(tab==="home"?" active":"")} onClick={()=>setTab("home")}><span className="ti">🏟️</span>Home</button>
           <button className={"navlink"+(tab==="palpites"?" active":"")} onClick={()=>setTab("palpites")}><span className="ti">✍️</span>Palpites</button>
           <button className={"navlink"+(tab==="ranking"?" active":"")} onClick={()=>setTab("ranking")}><span className="ti">🏆</span>Ranking</button>
+          <button className={"navlink"+(tab==="especiais"?" active":"")} onClick={()=>setTab("especiais")}><span className="ti">🔮</span>Especiais</button>
           <button className={"navlink"+(tab==="regras"?" active":"")} onClick={()=>setTab("regras")}><span className="ti">📋</span>Regras</button>
           {isAdmin && <button className={"navlink"+(tab==="admin"?" active":"")} onClick={()=>setTab("admin")}><span className="ti">🔧</span>Admin</button>}
         </nav>
@@ -1733,6 +1809,8 @@ function App(){
         specialMap={specialMap} official={official} onSave={onSaveGuess} onSaveSpecial={onSaveSpecial} savedId={savedId}/>}
       {tab==="ranking" && <Ranking ranking={ranking} me={me} matches={matches} now={now}
         guessMap={guessMap} specialMap={specialMap} official={official}/>}
+      {tab==="especiais" && <SpecialsBoard participants={participants} specialMap={specialMap}
+        matches={matches} now={now} me={me}/>}
       {tab==="regras" && <Regras/>}
       {tab==="admin" && isAdmin && <Admin matches={matches} official={official}
         onImport={onImport} onSaveMatch={onSaveMatch} onDeleteMatch={onDeleteMatch} onSaveResult={onSaveResult} onSaveOfficial={onSaveOfficial}/>}
