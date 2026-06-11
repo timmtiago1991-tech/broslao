@@ -398,6 +398,42 @@ a{color:var(--celeste)}
 .sboard td.you-col{background:rgba(37,99,235,.05)}
 .sboard .cellflag{display:inline-flex;align-items:center;gap:7px;justify-content:center}
 
+/* ---------- Campeão da rodada ---------- */
+.round-champ{display:flex;align-items:center;gap:13px;color:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;
+  background:radial-gradient(130% 170% at 0% 0%, #12a655 0%, #0a6e37 70%)}
+.round-champ .ic{font-size:28px;line-height:1}
+.round-champ .t{font-family:'Archivo';font-weight:900;font-size:17px;line-height:1.15}
+.round-champ .s{font-size:12.5px;color:rgba(255,255,255,.9);font-weight:600;margin-top:3px}
+.daypills{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;-webkit-overflow-scrolling:touch}
+.daypills::-webkit-scrollbar{display:none}
+.daypill{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:11px;padding:8px 12px;color:var(--muted);
+  font-family:'Archivo';cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:64px}
+.daypill .dl{font-size:14px;font-weight:800}
+.daypill .ds{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}
+.daypill:hover{border-color:var(--blue)}
+.daypill.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.daypill .ds.live{color:var(--live)} .daypill.on .ds{color:rgba(255,255,255,.85)}
+
+/* ---------- Consenso do bolão (live cards) ---------- */
+.cons{margin-bottom:12px;padding-bottom:13px;border-bottom:1px solid var(--line)}
+.cons-lab{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted-2);margin-bottom:8px}
+.cons-winner{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cons-winner .w{font-family:'Archivo';font-weight:900;font-size:15px;display:flex;align-items:center;gap:7px}
+.cons-winner .pc{font-family:'Archivo';font-weight:900;font-size:16px;color:var(--blue)}
+.probbar{display:flex;height:10px;border-radius:99px;overflow:hidden;background:var(--surface-2)}
+.probbar .seg{height:100%}
+.probbar .a{background:var(--blue)} .probbar .d{background:var(--muted-2)} .probbar .b{background:var(--amber)}
+.prob-ends{display:flex;justify-content:space-between;font-size:10px;font-weight:800;color:var(--muted);margin-top:5px}
+.xg{display:flex;align-items:center;gap:7px;margin-top:12px;font-size:12px;color:var(--muted);font-weight:600}
+.xg .v{font-family:'Archivo';font-weight:900;font-size:16px}
+.xg .va{color:var(--blue)} .xg .vb{color:var(--amber)} .xg .dash{color:var(--muted-2)}
+.scores{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.scl{display:flex;align-items:center;gap:9px;font-size:12px}
+.scl .sc{font-family:'Archivo';font-weight:900;width:42px;font-variant-numeric:tabular-nums}
+.scl .track{flex:1;height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden}
+.scl .fill{height:100%;background:linear-gradient(90deg,var(--blue),#5b8cf5);border-radius:99px}
+.scl .pct{width:40px;text-align:right;color:var(--muted);font-weight:700}
+
 </style>
 </head>
 <body>
@@ -419,7 +455,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com"];
-const BUILD = "v7 · aba especiais";
+const BUILD = "v10 · consenso do bolão";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -640,6 +676,31 @@ function buildRanking(participants, matches, guessMap, specialMap, official){
     (b.championCorrect?1:0)-(a.championCorrect?1:0) ||
     a.nickname.localeCompare(b.nickname)
   );
+}
+
+/* ---------- Rodadas (agrupadas por dia, BRT) ---------- */
+const dayKeyOf = (iso)=> new Intl.DateTimeFormat("en-CA",{timeZone:"America/Sao_Paulo",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date(iso));
+const dayLabelOf = (key)=>{ const p=key.split("-"); return p[2]+"/"+p[1]; };
+function buildRounds(matches){
+  const map={};
+  matches.forEach(m=>{ const k=dayKeyOf(m.kickoffISO); (map[k]=map[k]||[]).push(m); });
+  return Object.keys(map).sort().map(k=>({key:k,label:dayLabelOf(k),matches:map[k]}));
+}
+const roundDone = (rm)=> rm.length>0 && rm.every(m=> m.resultA!=null && m.resultB!=null);
+function roundRanking(rm, people, guessMap){
+  return people.map(p=>{
+    let total=0,exactCount=0,winnerCount=0;
+    rm.forEach(m=>{ const r=scoreMatch(guessMap[p.uid+"_"+m.id], m);
+      if(r){ total+=r.pts; if(r.exact)exactCount++; if(r.winner)winnerCount++; } });
+    return {...p,total,exactCount,winnerCount};
+  }).sort((a,b)=> b.total-a.total || b.exactCount-a.exactCount || b.winnerCount-a.winnerCount || a.nickname.localeCompare(b.nickname));
+}
+function roundChampion(rm, people, guessMap){
+  if(!roundDone(rm)) return null;
+  const rk=roundRanking(rm,people,guessMap);
+  if(!rk.length || rk[0].total<=0) return null;
+  const top=rk[0].total;
+  return { champs: rk.filter(p=>p.total===top), pts: top };
 }
 
 /* ============================================================
@@ -937,15 +998,62 @@ function PodiumCard({p, rank, total, medal, lant}){
 }
 
 function LiveGuessCard({m, people, guessMap}){
+  const ta=teamInfo(m.teamA), tb=teamInfo(m.teamB);
   const list=[...people]
     .map(p=>({nick:p.nickname, g:guessMap[p.uid+"_"+m.id]}))
     .sort((a,b)=> a.nick.localeCompare(b.nick,"pt"));
+  const gs=list.map(x=>x.g).filter(Boolean);
+  const n=gs.length;
+  let aWin=0,draw=0,bWin=0,sumA=0,sumB=0; const sc={};
+  gs.forEach(g=>{ const a=+g.a,b=+g.b; sumA+=a; sumB+=b;
+    if(a>b)aWin++; else if(a<b)bWin++; else draw++;
+    const k=a+"-"+b; sc[k]=(sc[k]||0)+1; });
+  const pct=(x)=> n?Math.round(x/n*100):0;
+  const aP=pct(aWin), dP=pct(draw), bP=n?Math.max(0,100-aP-dP):0;
+  const topScores=Object.entries(sc).sort((x,y)=>y[1]-x[1]).slice(0,3);
+  let winLab="", winPc=0, winFlag=null;
+  if(n){
+    if(aWin>=draw && aWin>=bWin){ winLab=ta.c; winPc=aP; winFlag=m.teamA; }
+    else if(bWin>=aWin && bWin>=draw){ winLab=tb.c; winPc=bP; winFlag=m.teamB; }
+    else { winLab="Empate"; winPc=dP; }
+  }
   return (
     <div className="livecard on">
       <div className="lc-head">
-        <span className="lc-title">{teamInfo(m.teamA).c} × {teamInfo(m.teamB).c}</span>
+        <span className="lc-title">{ta.c} × {tb.c}</span>
         <span className="status live"><span className="d"></span>Em andamento</span>
       </div>
+
+      {n>0 &&
+        <div className="cons">
+          <div className="cons-lab">Favorito do bolão · {n} palpite{n>1?"s":""}</div>
+          <div className="cons-winner">
+            <span className="w">{winFlag && <Flag name={winFlag}/>} {winLab}</span>
+            <span className="pc">{winPc}%</span>
+          </div>
+          <div className="probbar">
+            <div className="seg a" style={{width:aP+"%"}}/>
+            <div className="seg d" style={{width:dP+"%"}}/>
+            <div className="seg b" style={{width:bP+"%"}}/>
+          </div>
+          <div className="prob-ends">
+            <span>{ta.c} {aP}%</span><span>Empate {dP}%</span><span>{tb.c} {bP}%</span>
+          </div>
+          <div className="xg">Placar médio cravado:
+            <span className="v"><span className="va">{(sumA/n).toFixed(1)}</span> <span className="dash">–</span> <span className="vb">{(sumB/n).toFixed(1)}</span></span>
+          </div>
+          {topScores.length>0 &&
+            <div className="scores">
+              {topScores.map(([k,c])=>(
+                <div className="scl" key={k}>
+                  <span className="sc">{k.replace("-"," - ")}</span>
+                  <span className="track"><span className="fill" style={{width:Math.round(c/n*100)+"%"}}/></span>
+                  <span className="pct">{Math.round(c/n*100)}%</span>
+                </div>
+              ))}
+            </div>}
+        </div>}
+
       <div className="lc-rows">
         {list.map((x,i)=>(
           <div className="lc-row" key={i}>
@@ -966,8 +1074,20 @@ function Home({matches, now, ranking, me, guessMap, onSave, savedId}){
   const topIds=new Set(top3.map(p=>p.uid));
   const leigos = ranking.length>3 ? ranking.filter(p=>!topIds.has(p.uid)).slice(-3) : [];
   const medals=["🥇","🥈","🥉"];
+  const rounds=buildRounds(matches);
+  const doneR=rounds.filter(r=>roundDone(r.matches));
+  const lastDone=doneR[doneR.length-1];
+  const rc=lastDone?roundChampion(lastDone.matches,ranking,guessMap):null;
   return (
     <div className="wrap">
+      {rc &&
+        <div className="round-champ">
+          <span className="ic">🏅</span>
+          <div>
+            <div className="t">Campeão da rodada · {lastDone.label}</div>
+            <div className="s">{rc.champs.map(c=>c.nickname).join(", ")} · +{rc.pts} pts naquele dia</div>
+          </div>
+        </div>}
       {top3.length>0 &&
         <div className="hero-zones">
           <div>
@@ -1168,6 +1288,7 @@ function Ranking({ranking, me, matches, now, guessMap, specialMap, official}){
   const lay=rest.slice(-4);
   const layIds=new Set(lay.map(p=>p.uid));
   const middle=rest.filter(p=>!layIds.has(p.uid));
+
   return (
     <div className="wrap narrow">
       <div className="zone-h know"><span className="zi">🧠</span><span className="zt">Zona dos Conhecedores</span><span className="zs">Top 4</span></div>
