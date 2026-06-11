@@ -455,7 +455,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com"];
-const BUILD = "v10 · consenso do bolão";
+const BUILD = "v12 · editar especiais até 18h";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -463,6 +463,8 @@ const WELCOME_IMAGE = "";
 
 // Abertura da Copa (México × África do Sul) — fuso BRT. Especiais travam 5 min antes disto.
 const OPENING_KICKOFF = "2026-06-11T16:00:00-03:00";
+// Prazo final para preencher/editar os palpites especiais (e quando eles são revelados a todos).
+const SPECIALS_LOCK = "2026-06-11T18:00:00-03:00";
 
 // Máximo de participantes no bolão (cadastro bloqueia ao atingir o teto).
 const MAX_PLAYERS = 60;
@@ -723,7 +725,8 @@ function matchStatus(m, now){
 }
 const isLocked = (m, now)=> now >= (new Date(m.kickoffISO).getTime() - LOCK_MIN*60000) || (m.resultA!=null);
 const isStarted = (m, now)=> now >= new Date(m.kickoffISO).getTime() || (m.resultA!=null);
-const specialsLockMs = ()=> new Date(OPENING_KICKOFF).getTime() - LOCK_MIN*60000;
+const specialsLockMs = ()=> new Date(SPECIALS_LOCK).getTime();      // até quando dá para editar
+const specialsRevealMs = ()=> new Date(OPENING_KICKOFF).getTime();  // quando ficam visíveis a todos
 
 /* ============================================================
    5. AVATAR SVG  (sexo × cabelo × cor × camisa)
@@ -1240,7 +1243,7 @@ function Specials({defs, groups, matches, value, locked, official, onSave}){
   const teamsOf=(g)=> [...new Set(matches.filter(m=>m.group===g).flatMap(m=>[m.teamA,m.teamB]))].sort((a,b)=>a.localeCompare(b,"pt"));
   return (
     <>
-      <div className="banner">⏱️ Os especiais travam 5 min antes da abertura ({fmtBRT(OPENING_KICKOFF)} BRT) e são apurados no fim do torneio.</div>
+      <div className="banner">⏱️ Os especiais podem ser preenchidos/editados até {fmtBRT(SPECIALS_LOCK)} BRT. Depois disso ficam visíveis a todos e são apurados no fim do torneio.</div>
       <div className="sect-h"><h2>Palpites especiais</h2></div>
       {defs.map(s=>(
         <div className="field" key={s.key}>
@@ -1327,7 +1330,7 @@ function CompetitorSheet({p, me, matches, now, guessMap, specialMap, official, o
     .sort((x,y)=> new Date(y.kickoffISO)-new Date(x.kickoffISO));
   const sc=scoreParticipant(p.uid, matches, guessMap, specialMap[p.uid], official);
   const sp=specialMap[p.uid]||{};
-  const sLocked = now>=specialsLockMs();
+  const sLocked = now>=specialsRevealMs();
   return (
     <div className="overlay" onClick={onClose}>
       <div className="sheet" onClick={e=>e.stopPropagation()}>
@@ -1695,7 +1698,7 @@ function Regras(){
 
       <div className="rsec-h">📋 Regras gerais</div>
       <div className="rules-text">
-        <b>Travamento:</b> os palpites de cada jogo fecham <b>5 minutos antes do apito</b>. Os especiais e os líderes de grupo fecham 5 minutos antes da <b>abertura</b> ({fmtBRT(OPENING_KICKOFF)} BRT).<br/>
+        <b>Travamento:</b> os palpites de cada jogo fecham <b>5 minutos antes do apito</b>. Os especiais e os líderes de grupo fecham em <b>{fmtBRT(SPECIALS_LOCK)} BRT</b>.<br/>
         <b>Mata-mata:</b> vale o resultado do tempo normal <b>+ prorrogação</b>; pênaltis não contam para o placar.<br/>
         <b>Quem não palpitar</b> até o travamento fica com <b>0</b> naquele item.<br/>
         <b>Salvamento automático:</b> o palpite é gravado assim que você preenche os dois placares — sem botão de enviar.<br/>
@@ -1707,8 +1710,8 @@ function Regras(){
 
 /* ---------- ESPECIAIS DE TODOS (quadro) ---------- */
 function SpecialsBoard({participants, specialMap, matches, now, me}){
-  const firstKick = matches.length ? Math.min(...matches.map(m=>new Date(m.kickoffISO).getTime())) : Infinity;
-  const revealed = now >= firstKick;
+  const revealMs = specialsRevealMs();
+  const revealed = now >= revealMs;
   const groups=[...new Set(matches.filter(m=>m.phase==="grupos"&&m.group).map(m=>m.group))].sort();
   const cols=[...participants].sort((a,b)=> a.nickname.localeCompare(b.nickname,"pt"));
   const rows=[
@@ -1725,7 +1728,7 @@ function SpecialsBoard({participants, specialMap, matches, now, me}){
           <div><div className="rt">Especiais de todos</div>
             <div className="rs">Revelados quando a bola rolar no primeiro jogo.</div></div></div>
         <div className="empty">🔒 Os palpites especiais de todo mundo ficam visíveis a partir do <b>início do primeiro jogo</b>
-          {firstKick<Infinity ? " ("+fmtBRT(new Date(firstKick).toISOString())+" BRT)" : ""}.
+          {" ("+fmtBRT(OPENING_KICKOFF)+" BRT)"}.
           <br/>Até lá, cada um enxerga apenas os seus, na aba Palpites.</div>
       </div>
     );
