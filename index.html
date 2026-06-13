@@ -384,7 +384,10 @@ a{color:var(--celeste)}
 .lc-title{font-family:'Archivo';font-weight:900;font-size:17px;letter-spacing:.02em}
 .lc-rows{display:flex;flex-direction:column}
 .lc-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:14px}
-.lc-row .nk{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lc-row .nk{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
+.lc-right{display:flex;align-items:center;gap:8px;flex:none;margin-left:8px}
+.traitor{font-size:10px;font-weight:800;background:rgba(229,72,77,.12);color:var(--live);
+  border:1px solid rgba(229,72,77,.32);padding:3px 8px;border-radius:99px;white-space:nowrap;line-height:1}
 .lc-row .pl{font-family:'Archivo';font-weight:800;font-variant-numeric:tabular-nums;margin-left:10px}
 .lc-row .pl.none{color:var(--muted-2);font-family:'Inter';font-weight:600}
 
@@ -461,7 +464,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com"];
-const BUILD = "v14 · mobile";
+const BUILD = "v15 · traidor da pátria";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -1008,6 +1011,9 @@ function PodiumCard({p, rank, total, medal, lant}){
 
 function LiveGuessCard({m, people, guessMap}){
   const ta=teamInfo(m.teamA), tb=teamInfo(m.teamB);
+  const brMatch = m.teamA==="Brasil" || m.teamB==="Brasil";
+  const isBrazilWin=(g)=>{ if(!g) return false; const a=+g.a, b=+g.b;
+    return m.teamA==="Brasil" ? a>b : b>a; };
   const list=[...people]
     .map(p=>({nick:p.nickname, g:guessMap[p.uid+"_"+m.id]}))
     .sort((a,b)=> a.nick.localeCompare(b.nick,"pt"));
@@ -1064,12 +1070,18 @@ function LiveGuessCard({m, people, guessMap}){
         </div>}
 
       <div className="lc-rows">
-        {list.map((x,i)=>(
-          <div className="lc-row" key={i}>
-            <span className="nk">{x.nick}</span>
-            <span className={"pl"+(x.g?"":" none")}>{x.g ? x.g.a+" - "+x.g.b : "—"}</span>
-          </div>
-        ))}
+        {list.map((x,i)=>{
+          const traidor = brMatch && x.g && !isBrazilWin(x.g);
+          return (
+            <div className="lc-row" key={i}>
+              <span className="nk">{x.nick}</span>
+              <span className="lc-right">
+                {traidor && <span className="traitor">🐔 Traidor da Pátria</span>}
+                <span className={"pl"+(x.g?"":" none")}>{x.g ? x.g.a+" - "+x.g.b : "—"}</span>
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
