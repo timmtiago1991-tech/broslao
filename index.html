@@ -377,6 +377,17 @@ a{color:var(--celeste)}
 .podium.lant .pos{color:var(--live)}
 @media(max-width:760px){ .hero-zones{grid-template-columns:1fr} }
 
+/* ---------- Rei/Rainha (cravada & consistência) ---------- */
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:6px}
+.king{display:flex;align-items:center;gap:12px;border-radius:14px;padding:13px 15px;color:#fff;min-width:0}
+.king.cravada{background:linear-gradient(120deg,#C8881A,#F2B705)}
+.king.consist{background:linear-gradient(120deg,#1D4ED8,#4f8cf7)}
+.king .ic{font-size:26px;line-height:1;flex:none}
+.king .lab{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:rgba(255,255,255,.92)}
+.king .who{font-family:'Archivo';font-weight:900;font-size:16px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.king .ct{font-size:12px;color:rgba(255,255,255,.92);font-weight:700;margin-top:1px}
+@media(max-width:760px){ .king{padding:11px 12px;gap:9px} .king .ic{font-size:22px} .king .who{font-size:14px} .king .lab{font-size:9.5px} }
+
 .livecard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;
   box-shadow:0 1px 2px rgba(20,20,20,.04);position:relative;overflow:hidden}
 .livecard.on{border-color:rgba(229,72,77,.4)}
@@ -464,7 +475,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com"];
-const BUILD = "v15 · traidor da pátria";
+const BUILD = "v16 · rei da cravada";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -1099,6 +1110,11 @@ function Home({matches, now, ranking, me, guessMap, onSave, savedId}){
   const doneR=rounds.filter(r=>roundDone(r.matches));
   const lastDone=doneR[doneR.length-1];
   const rc=lastDone?roundChampion(lastDone.matches,ranking,guessMap):null;
+  const kingTitle=(p,base)=> (p&&p.avatar&&p.avatar.sex==="m"?"Rainha":"Rei")+" da "+base;
+  const byCravada=[...ranking].sort((a,b)=> b.exactCount-a.exactCount || b.total-a.total || a.nickname.localeCompare(b.nickname));
+  const byAcerto=[...ranking].sort((a,b)=> b.winnerCount-a.winnerCount || b.total-a.total || a.nickname.localeCompare(b.nickname));
+  const kCrav=byCravada[0], kAcer=byAcerto[0];
+  const hasStats = ranking.some(p=>p.exactCount>0 || p.winnerCount>0);
   return (
     <div className="wrap">
       {rc &&
@@ -1109,6 +1125,27 @@ function Home({matches, now, ranking, me, guessMap, onSave, savedId}){
             <div className="s">{rc.champs.map(c=>c.nickname).join(", ")} · +{rc.pts} pts naquele dia</div>
           </div>
         </div>}
+
+      {hasStats &&
+        <div className="duo">
+          <div className="king cravada">
+            <span className="ic">🎯</span>
+            <div style={{minWidth:0}}>
+              <div className="lab">👑 {kingTitle(kCrav,"Cravada")}</div>
+              <div className="who">{kCrav.nickname}</div>
+              <div className="ct">{kCrav.exactCount} cravada{kCrav.exactCount!==1?"s":""}</div>
+            </div>
+          </div>
+          <div className="king consist">
+            <span className="ic">📈</span>
+            <div style={{minWidth:0}}>
+              <div className="lab">👑 {kingTitle(kAcer,"Consistência")}</div>
+              <div className="who">{kAcer.nickname}</div>
+              <div className="ct">{kAcer.winnerCount} acerto{kAcer.winnerCount!==1?"s":""}</div>
+            </div>
+          </div>
+        </div>}
+
       {top3.length>0 &&
         <div className="hero-zones">
           <div>
