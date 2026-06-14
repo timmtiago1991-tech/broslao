@@ -140,6 +140,8 @@ a{color:var(--celeste)}
 .pts.pending{background:var(--surface-2);color:var(--muted-2)}
 .savep{font-size:11px;color:var(--green);font-weight:700;opacity:0;transition:opacity .3s}
 .savep.show{opacity:1}
+.reg{font-size:11px;color:var(--muted);font-weight:600}
+.reg b{color:var(--green);font-family:'Archivo';font-weight:900;font-size:13px}
 
 /* ---------- Ranking ---------- */
 .rank-hero{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;-webkit-overflow-scrolling:touch}
@@ -474,8 +476,8 @@ const firebaseConfig = {
   appId:             "1:935011134081:web:ad3b385f8972bfe7667b80",
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
-const ADMIN_EMAILS = ["timmtiago1991@gmail.com"];
-const BUILD = "v16 · rei da cravada";
+const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
+const BUILD = "v20 · 3 admins";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -644,6 +646,16 @@ const LEADER_BONUS = 3;
    3. MOTOR DE PONTUAÇÃO  (puro, derivado dos resultados oficiais)
    ============================================================ */
 const sgn = n => n>0?1:(n<0?-1:0);
+
+// Normaliza um placar para 1 dígito. O erro conhecido é dígito extra no fim
+// (3→33, 3→30), então em valores >9 o 1º dígito é o que a pessoa quis.
+const cleanScore = (v)=>{
+  if(v==null || v==="") return v;
+  let n=parseInt(v,10);
+  if(isNaN(n)) return v;
+  if(n<0) n=0;
+  return n>9 ? +String(n)[0] : n;
+};
 
 // Pontos de UM jogo. Retorna {pts, exact, winner} ou null se sem palpite/sem resultado.
 function scoreMatch(guess, m){
@@ -944,12 +956,14 @@ function countdownLabel(m, now){
 function MatchCard({m, now, guess, onSave, editable, ptResult, showSaved}){
   const [a,setA]=useState(guess?.a ?? "");
   const [b,setB]=useState(guess?.b ?? "");
-  useEffect(()=>{ setA(guess?.a ?? ""); setB(guess?.b ?? ""); },[guess?.a,guess?.b]);
+  const editing=useRef(false);
+  useEffect(()=>{ if(editing.current) return; setA(guess?.a ?? ""); setB(guess?.b ?? ""); },[guess?.a,guess?.b]);
   const locked = !editable;
   const st=matchStatus(m,now);
   const ta=teamInfo(m.teamA), tb=teamInfo(m.teamB);
   const cd=countdownLabel(m,now);
   const venue = m.venue || VENUES[m.teamA+"|"+m.teamB];
+  const oneDigit=(val)=> String(val).replace(/\D/g,"").slice(-1);   // 1 dígito; o último vence (evita 33/30)
   const commit=(na,nb)=>{ if(na!=="" && nb!=="" && na!=null && nb!=null) onSave(m.id,{a:+na,b:+nb}); };
 
   return (
@@ -963,10 +977,12 @@ function MatchCard({m, now, guess, onSave, editable, ptResult, showSaved}){
         <div className="team"><span className="tcode">{ta.c}</span><Flag name={m.teamA}/></div>
         <div className="center">
           <input className="scorebox num" inputMode="numeric" value={a} disabled={locked}
-            onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,2);setA(v);commit(v,b);}} placeholder="–"/>
+            onFocus={()=>editing.current=true} onBlur={()=>editing.current=false}
+            onChange={e=>{const v=oneDigit(e.target.value);setA(v);commit(v,b);}} placeholder="–"/>
           <span className="score-x">-</span>
           <input className="scorebox num" inputMode="numeric" value={b} disabled={locked}
-            onChange={e=>{const v=e.target.value.replace(/\D/g,"").slice(0,2);setB(v);commit(a,v);}} placeholder="–"/>
+            onFocus={()=>editing.current=true} onBlur={()=>editing.current=false}
+            onChange={e=>{const v=oneDigit(e.target.value);setB(v);commit(a,v);}} placeholder="–"/>
         </div>
         <div className="team right"><Flag name={m.teamB}/><span className="tcode">{tb.c}</span></div>
       </div>
@@ -975,16 +991,18 @@ function MatchCard({m, now, guess, onSave, editable, ptResult, showSaved}){
           <span className="lab">Resultado oficial</span>
           <span className="res num">{m.resultA} × {m.resultB}</span>
         </div>}
-      {(ptResult!==undefined || showSaved) &&
+      {((editable && guess && guess.a!=null && guess.b!=null) || ptResult!==undefined || showSaved) &&
         <div className="match-foot">
-          <span/>
+          {editable && guess && guess.a!=null && guess.b!=null
+            ? <span className="reg">✓ registrado <b>{guess.a} - {guess.b}</b></span>
+            : <span/>}
           {ptResult!==undefined
             ? (ptResult===null
                 ? <span className="pts pending">aguardando</span>
                 : <span className={"pts "+(ptResult.pts>0?"pos":"zero")}>
                     {ptResult.pts>0?"+"+ptResult.pts+" pts":"0 pts"}{ptResult.exact?" · cravou":""}
                   </span>)
-            : <span className="savep show">salvo ✓</span>}
+            : (showSaved ? <span className="savep show">salvo ✓</span> : null)}
         </div>}
     </div>
   );
@@ -1435,7 +1453,7 @@ function CompetitorSheet({p, me, matches, now, guessMap, specialMap, official, o
 }
 
 /* ---------- ADMIN ---------- */
-function Admin({matches, official, onImport, onSaveMatch, onDeleteMatch, onSaveResult, onSaveOfficial, toast}){
+function Admin({matches, official, participants, guessMap, now, onSaveGuessFor, onImport, onSaveMatch, onDeleteMatch, onSaveResult, onSaveOfficial, toast}){
   const [tab,setTab]=useState("tabela");
   const groups=[...new Set(matches.filter(m=>m.phase==="grupos"&&m.group).map(m=>m.group))].sort();
   return (
@@ -1444,11 +1462,52 @@ function Admin({matches, official, onImport, onSaveMatch, onDeleteMatch, onSaveR
       <div className="tabs-pill">
         <button className={tab==="tabela"?"on":""} onClick={()=>setTab("tabela")}>Tabela & Resultados</button>
         <button className={tab==="oficiais"?"on":""} onClick={()=>setTab("oficiais")}>Especiais & Líderes</button>
+        <button className={tab==="palpites"?"on":""} onClick={()=>setTab("palpites")}>Corrigir palpites</button>
       </div>
       {tab==="tabela" && <AdminMatches matches={matches} onImport={onImport} onSaveMatch={onSaveMatch}
         onDeleteMatch={onDeleteMatch} onSaveResult={onSaveResult}/>}
       {tab==="oficiais" && <AdminOfficial groups={groups} official={official} onSaveOfficial={onSaveOfficial}/>}
+      {tab==="palpites" && <AdminGuesses matches={matches} participants={participants} guessMap={guessMap}
+        now={now} onSaveGuessFor={onSaveGuessFor}/>}
     </div>
+  );
+}
+
+function AdminGuesses({matches, participants, guessMap, now, onSaveGuessFor}){
+  const people=[...participants].sort((a,b)=>(a.nickname||"").localeCompare(b.nickname||"","pt"));
+  const games=[...matches].sort((x,y)=> new Date(y.kickoffISO)-new Date(x.kickoffISO)); // recentes primeiro
+  const [pid,setPid]=useState("");
+  const [mid,setMid]=useState("");
+  const [a,setA]=useState(""); const [b,setB]=useState("");
+  const cur = (pid&&mid) ? guessMap[pid+"_"+mid] : null;
+  useEffect(()=>{ setA(cur&&cur.a!=null?String(cur.a):""); setB(cur&&cur.b!=null?String(cur.b):""); },[pid,mid]);
+  const one=(v)=> String(v).replace(/\D/g,"").slice(-1);
+  const save=()=>{ if(pid&&mid&&a!==""&&b!=="") onSaveGuessFor(pid,mid,{a:+a,b:+b}); };
+  return (
+    <>
+      <div className="banner">✏️ Edite o palpite de qualquer jogador, inclusive em jogos já em andamento. Use só para corrigir falhas — o ranking recalcula na hora.</div>
+      <div className="field"><label>Jogador</label>
+        <select className="input" value={pid} onChange={e=>setPid(e.target.value)}>
+          <option value="">Selecione…</option>
+          {people.map(p=><option key={p.uid} value={p.uid}>{p.nickname}</option>)}
+        </select></div>
+      <div className="field"><label>Jogo</label>
+        <select className="input" value={mid} onChange={e=>setMid(e.target.value)}>
+          <option value="">Selecione…</option>
+          {games.map(m=><option key={m.id} value={m.id}>{teamInfo(m.teamA).c} × {teamInfo(m.teamB).c} · {fmtBRT(m.kickoffISO)} · {matchStatus(m,now).label}</option>)}
+        </select></div>
+      {pid && mid && <>
+        <div className="note" style={{margin:"2px 2px 10px"}}>Palpite atual: <b style={{color:"var(--chalk)"}}>{cur&&cur.a!=null?cur.a+" - "+cur.b:"— (sem palpite)"}</b></div>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <input className="input num" style={{width:60,textAlign:"center"}} inputMode="numeric" value={a}
+            onChange={e=>setA(one(e.target.value))} placeholder="–"/>
+          <span className="score-x">×</span>
+          <input className="input num" style={{width:60,textAlign:"center"}} inputMode="numeric" value={b}
+            onChange={e=>setB(one(e.target.value))} placeholder="–"/>
+          <button className="btn prim" style={{flex:1}} disabled={a===""||b===""} onClick={save}>Salvar palpite</button>
+        </div>
+      </>}
+    </>
   );
 }
 
@@ -1924,7 +1983,7 @@ function App(){
     setProfile(p||null);
   },[user,participants,pLoaded]);
 
-  const guessMap=useMemo(()=>{const m={};guesses.forEach(g=>m[(g.uid)+"_"+(g.matchId)]=g);return m;},[guesses]);
+  const guessMap=useMemo(()=>{const m={};guesses.forEach(g=>m[(g.uid)+"_"+(g.matchId)]={...g, a:cleanScore(g.a), b:cleanScore(g.b)});return m;},[guesses]);
   const specialMap=useMemo(()=>{const m={};specials.forEach(s=>m[s.uid||s.id]=s);return m;},[specials]);
   const ranking=useMemo(()=>buildRanking(participants,matches,guessMap,specialMap,official),
     [participants,matches,guessMap,specialMap,official]);
@@ -1935,7 +1994,8 @@ function App(){
   const popToast=(t)=>{ setToast(t); setTimeout(()=>setToast(""),2200); };
 
   const onSaveGuess=async(mId,g)=>{
-    try{ await store.saveGuess(me,mId,g); flash(mId); }
+    const clean={a:cleanScore(g.a), b:cleanScore(g.b)};
+    try{ await store.saveGuess(me,mId,clean); flash(mId); }
     catch(e){ popToast("⚠️ Não consegui salvar o palpite. Verifique a conexão."); }
   };
   const onSaveSpecial=async(d)=>{
@@ -1946,6 +2006,11 @@ function App(){
   const onDeleteMatch=(id)=>{ store.deleteMatch(id); popToast("Jogo excluído"); };
   const onSaveResult=(id,a,b)=>{ store.saveMatch({id,resultA:a,resultB:b}); popToast("Resultado lançado · ranking atualizado"); };
   const onSaveOfficial=(d)=>{ store.saveOfficial(d); popToast("Oficiais salvos"); };
+  const onAdminSaveGuess=async(uid,mId,g)=>{
+    const clean={a:cleanScore(g.a), b:cleanScore(g.b)};
+    try{ await store.saveGuess(uid,mId,clean); popToast("Palpite do jogador atualizado · ranking recalculado"); }
+    catch(e){ popToast("⚠️ Falha ao atualizar. Publique as regras de admin para guesses."); }
+  };
   const onImport=()=>{ OFFICIAL_FIXTURES.forEach(f=> store.saveMatch({...f})); popToast("Tabela oficial importada · "+OFFICIAL_FIXTURES.length+" jogos"); };
   const onProfileDone=(d)=> store.saveProfile(me,d);
 
@@ -1991,7 +2056,8 @@ function App(){
       {tab==="especiais" && <SpecialsBoard participants={participants} specialMap={specialMap}
         matches={matches} now={now} me={me}/>}
       {tab==="regras" && <Regras/>}
-      {tab==="admin" && isAdmin && <Admin matches={matches} official={official}
+      {tab==="admin" && isAdmin && <Admin matches={matches} official={official} participants={participants}
+        guessMap={guessMap} now={now} onSaveGuessFor={onAdminSaveGuess}
         onImport={onImport} onSaveMatch={onSaveMatch} onDeleteMatch={onDeleteMatch} onSaveResult={onSaveResult} onSaveOfficial={onSaveOfficial}/>}
 
       <div style={{textAlign:"center",color:"var(--muted-2)",fontSize:"12px",padding:"26px 0 34px"}}>BROS<span style={{color:"var(--redlao)"}}>.lão</span> · {BUILD}</div>
