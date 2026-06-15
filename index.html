@@ -386,7 +386,8 @@ a{color:var(--celeste)}
 .king.consist{background:linear-gradient(120deg,#1D4ED8,#4f8cf7)}
 .king .ic{font-size:26px;line-height:1;flex:none}
 .king .lab{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:rgba(255,255,255,.92)}
-.king .who{font-family:'Archivo';font-weight:900;font-size:16px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.king .who{font-family:'Archivo';font-weight:900;font-size:16px;line-height:1.2;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 .king .ct{font-size:12px;color:rgba(255,255,255,.92);font-weight:700;margin-top:1px}
 @media(max-width:760px){ .king{padding:11px 12px;gap:9px} .king .ic{font-size:22px} .king .who{font-size:14px} .king .lab{font-size:9.5px} }
 
@@ -477,7 +478,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v20 · 3 admins";
+const BUILD = "v21 · reis empatados";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -1128,11 +1129,16 @@ function Home({matches, now, ranking, me, guessMap, onSave, savedId}){
   const doneR=rounds.filter(r=>roundDone(r.matches));
   const lastDone=doneR[doneR.length-1];
   const rc=lastDone?roundChampion(lastDone.matches,ranking,guessMap):null;
-  const kingTitle=(p,base)=> (p&&p.avatar&&p.avatar.sex==="m"?"Rainha":"Rei")+" da "+base;
-  const byCravada=[...ranking].sort((a,b)=> b.exactCount-a.exactCount || b.total-a.total || a.nickname.localeCompare(b.nickname));
-  const byAcerto=[...ranking].sort((a,b)=> b.winnerCount-a.winnerCount || b.total-a.total || a.nickname.localeCompare(b.nickname));
-  const kCrav=byCravada[0], kAcer=byAcerto[0];
-  const hasStats = ranking.some(p=>p.exactCount>0 || p.winnerCount>0);
+  const kingLabel=(list,base)=>{
+    if(list.length<=1){ const p=list[0]; return (p&&p.avatar&&p.avatar.sex==="m"?"Rainha":"Rei")+" da "+base; }
+    const allF=list.every(p=>p.avatar&&p.avatar.sex==="m");
+    return (allF?"Rainhas":"Reis")+" da "+base;
+  };
+  const maxCrav=ranking.reduce((mx,p)=>Math.max(mx,p.exactCount),0);
+  const maxAcer=ranking.reduce((mx,p)=>Math.max(mx,p.winnerCount),0);
+  const cravLeaders = maxCrav>0 ? ranking.filter(p=>p.exactCount===maxCrav).sort((a,b)=>a.nickname.localeCompare(b.nickname,"pt")) : [];
+  const acerLeaders = maxAcer>0 ? ranking.filter(p=>p.winnerCount===maxAcer).sort((a,b)=>a.nickname.localeCompare(b.nickname,"pt")) : [];
+  const hasStats = maxCrav>0 || maxAcer>0;
   return (
     <div className="wrap">
       {rc &&
@@ -1149,17 +1155,17 @@ function Home({matches, now, ranking, me, guessMap, onSave, savedId}){
           <div className="king cravada">
             <span className="ic">🎯</span>
             <div style={{minWidth:0}}>
-              <div className="lab">👑 {kingTitle(kCrav,"Cravada")}</div>
-              <div className="who">{kCrav.nickname}</div>
-              <div className="ct">{kCrav.exactCount} cravada{kCrav.exactCount!==1?"s":""}</div>
+              <div className="lab">👑 {cravLeaders.length?kingLabel(cravLeaders,"Cravada"):"Rei da Cravada"}</div>
+              <div className="who">{cravLeaders.length?cravLeaders.map(p=>p.nickname).join(", "):"A definir"}</div>
+              {cravLeaders.length>0 && <div className="ct">{maxCrav} cravada{maxCrav!==1?"s":""}{cravLeaders.length>1?" · "+cravLeaders.length+" empatados":""}</div>}
             </div>
           </div>
           <div className="king consist">
             <span className="ic">📈</span>
             <div style={{minWidth:0}}>
-              <div className="lab">👑 {kingTitle(kAcer,"Consistência")}</div>
-              <div className="who">{kAcer.nickname}</div>
-              <div className="ct">{kAcer.winnerCount} acerto{kAcer.winnerCount!==1?"s":""}</div>
+              <div className="lab">👑 {acerLeaders.length?kingLabel(acerLeaders,"Consistência"):"Rei da Consistência"}</div>
+              <div className="who">{acerLeaders.length?acerLeaders.map(p=>p.nickname).join(", "):"A definir"}</div>
+              {acerLeaders.length>0 && <div className="ct">{maxAcer} acerto{maxAcer!==1?"s":""}{acerLeaders.length>1?" · "+acerLeaders.length+" empatados":""}</div>}
             </div>
           </div>
         </div>}
