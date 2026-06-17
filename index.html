@@ -1745,4 +1745,385 @@ function CafuArt(){
       <g opacity="0.5">
         {Array.from({length:14}).map((_,i)=>{
           const a=(i/14)*Math.PI*2, x=160+Math.cos(a)*240, y=90+Math.sin(a)*240;
-          return <line key={i} x1="160" y1="90" x2={x} y2={y} 
+          return <line key={i} x1="160" y1="90" x2={x} y2={y} stroke="#FFD400" strokeWidth="7" opacity="0.35"/>;
+        })}
+      </g>
+      <circle cx="160" cy="90" r="58" fill="#FFD400" opacity="0.25"/>
+      {/* taça */}
+      <g>
+        <path d="M132 40 h56 v10 c0 26 -12 44 -28 44 c-16 0 -28 -18 -28 -44 z" fill="#F4C430"/>
+        <path d="M132 46 c-16 2 -20 -14 -10 -20 c6 -4 12 -1 14 4" fill="none" stroke="#F4C430" strokeWidth="6" strokeLinecap="round"/>
+        <path d="M188 46 c16 2 20 -14 10 -20 c-6 -4 -12 -1 -14 4" fill="none" stroke="#F4C430" strokeWidth="6" strokeLinecap="round"/>
+        <rect x="153" y="92" width="14" height="20" fill="#E0A92A"/>
+        <path d="M138 112 h44 l-6 14 h-32 z" fill="#F4C430"/>
+        <ellipse cx="160" cy="56" rx="22" ry="7" fill="#FFE680" opacity="0.7"/>
+      </g>
+      {/* jogador */}
+      <g>
+        {/* braços erguidos até a taça */}
+        <path d="M120 150 C128 124 146 120 158 124" fill="none" stroke="#E8B58C" strokeWidth="13" strokeLinecap="round"/>
+        <path d="M200 150 C192 124 174 120 162 124" fill="none" stroke="#E8B58C" strokeWidth="13" strokeLinecap="round"/>
+        {/* cabeça */}
+        <circle cx="160" cy="158" r="22" fill="#E8B58C"/>
+        <path d="M140 150 c2 -16 38 -16 40 0 c-8 -7 -32 -7 -40 0 z" fill="#23211F"/>
+        {/* tronco - camisa amarela */}
+        <path d="M126 196 C126 178 142 172 160 172 C178 172 194 178 194 196 L198 270 L122 270 Z" fill="#FFCE2E"/>
+        <path d="M150 172 c3 8 17 8 20 0 l6 6 c-6 12 -26 12 -32 0 z" fill="#0E8C46"/>
+        <text x="160" y="236" textAnchor="middle" fontFamily="Archivo" fontWeight="900" fontSize="30" fill="#0E8C46">10</text>
+        {/* shorts azul + pernas */}
+        <path d="M122 270 h76 l-4 30 h-26 l-4 -16 -4 16 h-26 z" fill="#1E50A0"/>
+        <rect x="132" y="300" width="14" height="34" rx="6" fill="#E8B58C"/>
+        <rect x="174" y="300" width="14" height="34" rx="6" fill="#E8B58C"/>
+      </g>
+    </svg>
+  );
+}
+
+function Onboarding({onDone}){
+  const [nick,setNick]=useState("");
+  const [av,setAv]=useState({sex:"h",hair:"curto",hairColor:"preto",shirt:"brasil"});
+  const [busy,setBusy]=useState(false);
+  const [err,setErr]=useState("");
+  const Opt=({on,cel,children,onClick})=>(
+    <button className={"opt"+(on?" on":"")+(on&&cel?" cel":"")} onClick={onClick}>{children}</button>);
+  const confirm=async()=>{
+    if(!nick.trim()||busy) return;
+    setErr(""); setBusy(true);
+    try{ await onDone({nickname:nick.trim(),avatar:av}); /* sucesso → o app troca de tela sozinho */ }
+    catch(e){ setErr("Não consegui salvar seu perfil. Verifique a conexão e tente de novo."); setBusy(false); }
+  };
+  return (
+    <div className="welcome">
+      <div className="welcome-left">
+        <Confetti/>
+        <CafuArt/>
+        <div className="wtitle">Bem-Vindo ao <span className="r">BROS</span>.<span className="y">lão</span> da Copa</div>
+        <div className="wsub">Hexa é o destino. Bora cravar os placares! 🇧🇷</div>
+      </div>
+      <div className="welcome-right">
+        <div className="welcome-card">
+          <div className="eyebrow">Quase lá</div>
+          <h2>Crie seu jogador</h2>
+          <div className="csub">Escolha seu avatar e um apelido para entrar na disputa.</div>
+          <div className="av-preview"><Avatar avatar={av} size={104}/></div>
+          <div className="field"><label>Apelido</label>
+            <input className="input" value={nick} maxLength={16} onChange={e=>setNick(e.target.value)} placeholder="ex.: Craque10"/></div>
+          <div className="field"><label>Sexo</label><div className="opts">
+            <Opt on={av.sex==="h"} onClick={()=>setAv({...av,sex:"h"})}>Homem</Opt>
+            <Opt on={av.sex==="m"} onClick={()=>setAv({...av,sex:"m"})}>Mulher</Opt></div></div>
+          <div className="field"><label>Cabelo</label><div className="opts">
+            {["longo","curto","careca"].map(h=><Opt key={h} on={av.hair===h} onClick={()=>setAv({...av,hair:h})}>{h}</Opt>)}</div></div>
+          <div className="field"><label>Cor do cabelo</label><div className="opts">
+            <Opt on={av.hairColor==="preto"} onClick={()=>setAv({...av,hairColor:"preto"})}>Preto</Opt>
+            <Opt on={av.hairColor==="loiro"} onClick={()=>setAv({...av,hairColor:"loiro"})}>Loiro</Opt></div></div>
+          <div className="field"><label>Camisa</label><div className="opts">
+            <Opt on={av.shirt==="brasil"} onClick={()=>setAv({...av,shirt:"brasil"})}>🇧🇷 Brasil</Opt>
+            <Opt on={av.shirt==="argentina"} cel onClick={()=>setAv({...av,shirt:"argentina"})}>🇦🇷 Argentina</Opt></div></div>
+          {err && <div className="banner" style={{background:"rgba(229,72,77,.1)",borderColor:"rgba(229,72,77,.3)",color:"var(--live)"}}>{err}</div>}
+          <button className="btn prim" disabled={!nick.trim()||busy} style={{opacity:(!nick.trim()||busy)?.5:1,marginTop:6}}
+            onClick={confirm}>{busy?"Salvando…":"Confirmar e entrar"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ---------- REGRAS ---------- */
+function Regras(){
+  return (
+    <div className="wrap narrow">
+      <div className="rules-hero">
+        <BallArt size={66}/>
+        <div>
+          <div className="rt">Como funciona o bolão</div>
+          <div className="rs">Cravou o placar, pontuou. Quanto mais a Copa avança, mais cada jogo vale.</div>
+        </div>
+      </div>
+
+      <div className="rsec-h">⚽ Pontos por jogo (fase de grupos)</div>
+      <div className="rules-grid">
+        <div className="rule-card"><div className="ic">🎯</div><div className="big">10</div><h4>Placar exato</h4><p>Cravou o resultado certinho (ex.: 2 a 1).</p></div>
+        <div className="rule-card"><div className="ic">⚖️</div><div className="big">6</div><h4>Vencedor + saldo</h4><p>Acertou quem ganhou e por quantos gols (apostou 2x1, deu 3x2).</p></div>
+        <div className="rule-card"><div className="ic">✅</div><div className="big">4</div><h4>Resultado certo</h4><p>Acertou só o vencedor — ou o empate.</p></div>
+        <div className="rule-card zero"><div className="ic">❌</div><div className="big">0</div><h4>Errou</h4><p>Não acertou nem o vencedor.</p></div>
+      </div>
+
+      <div className="rsec-h">🔥 Multiplicador por fase</div>
+      <table className="rtable">
+        <thead><tr><th>Fase</th><th>Mult.</th><th>Exato</th><th>Venc.+saldo</th><th>Resultado</th></tr></thead>
+        <tbody>
+          {PHASE_ORDER.map(k=>{const m=PHASES[k].mult;
+            return <tr key={k}><td>{PHASES[k].label}</td><td>×{m}</td><td>{10*m}</td><td>{6*m}</td><td>{4*m}</td></tr>;})}
+        </tbody>
+      </table>
+
+      <div className="rsec-h">🏆 Palpites especiais (cravados antes da abertura)</div>
+      <div className="rules-grid">
+        <div className="rule-card gold"><div className="ic">🏆</div><div className="big">30</div><h4>Campeão</h4><p>Quem levanta a taça.</p></div>
+        <div className="rule-card gold"><div className="ic">🥈</div><div className="big">15</div><h4>Vice-campeão</h4><p>O finalista derrotado.</p></div>
+        <div className="rule-card gold"><div className="ic">👟</div><div className="big">20</div><h4>Artilheiro</h4><p>Chuteira de Ouro.</p></div>
+        <div className="rule-card gold"><div className="ic">⚽</div><div className="big">20</div><h4>Melhor jogador</h4><p>Bola de Ouro.</p></div>
+        <div className="rule-card gold"><div className="ic">🧤</div><div className="big">20</div><h4>Melhor goleiro</h4><p>Luva de Ouro.</p></div>
+        <div className="rule-card"><div className="ic">🥇</div><div className="big">+3</div><h4>Líder de grupo</h4><p>Por grupo acertado (até +36 nos 12 grupos).</p></div>
+      </div>
+
+      <div className="rsec-h">📋 Regras gerais</div>
+      <div className="rules-text">
+        <b>Travamento:</b> os palpites de cada jogo fecham <b>5 minutos antes do apito</b>. Os especiais e os líderes de grupo fecham em <b>{fmtBRT(SPECIALS_LOCK)} BRT</b>.<br/>
+        <b>Mata-mata:</b> vale o resultado do tempo normal <b>+ prorrogação</b>; pênaltis não contam para o placar.<br/>
+        <b>Quem não palpitar</b> até o travamento fica com <b>0</b> naquele item.<br/>
+        <b>Salvamento automático:</b> o palpite é gravado assim que você preenche os dois placares — sem botão de enviar.<br/>
+        <b>Desempate no ranking:</b> 1) mais placares exatos · 2) mais acertos de vencedor · 3) acerto do campeão.
+      </div>
+    </div>
+  );
+}
+
+/* ---------- ESPECIAIS DE TODOS (quadro) ---------- */
+function SpecialsBoard({participants, specialMap, matches, now, me}){
+  const revealMs = specialsRevealMs();
+  const revealed = now >= revealMs;
+  const groups=[...new Set(matches.filter(m=>m.phase==="grupos"&&m.group).map(m=>m.group))].sort();
+  const cols=[...participants].sort((a,b)=> a.nickname.localeCompare(b.nickname,"pt"));
+  const rows=[
+    ...SPECIAL_DEFS.map(s=>({key:s.key, label:s.label.split(" · ")[0], ic:s.ic, country:(s.key==="champion"||s.key==="runnerUp")})),
+    ...groups.map(g=>({key:"L"+g, leader:g, label:"Líder "+g, ic:"🥇", country:true})),
+  ];
+  const cellVal=(p,row)=>{ const sp=specialMap[p.uid]||{};
+    return row.leader ? ((sp.leaders||{})[row.leader]||"") : (sp[row.key]||""); };
+
+  if(!revealed){
+    return (
+      <div className="wrap narrow">
+        <div className="rules-hero"><BallArt size={60}/>
+          <div><div className="rt">Especiais de todos</div>
+            <div className="rs">Revelados quando a bola rolar no primeiro jogo.</div></div></div>
+        <div className="empty">🔒 Os palpites especiais de todo mundo ficam visíveis a partir do <b>início do primeiro jogo</b>
+          {" ("+fmtBRT(OPENING_KICKOFF)+" BRT)"}.
+          <br/>Até lá, cada um enxerga apenas os seus, na aba Palpites.</div>
+      </div>
+    );
+  }
+  return (
+    <div className="wrap">
+      <div className="sect-h"><h2>Palpites especiais de todos</h2><span className="note">{cols.length} participantes</span></div>
+      <div className="sboard-wrap">
+        <table className="sboard">
+          <thead>
+            <tr>
+              <th className="corner">Palpite</th>
+              {cols.map(p=><th key={p.uid} className={p.uid===me?"you":""}>{p.nickname}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(row=>(
+              <tr key={row.key}>
+                <td className="rowh">{row.ic} {row.label}</td>
+                {cols.map(p=>{ const v=cellVal(p,row);
+                  return (
+                    <td key={p.uid} className={"val"+(v?"":" empty")+(p.uid===me?" you-col":"")}>
+                      {v ? (row.country ? <span className="cellflag"><Flag name={v}/> {v}</span> : v) : "—"}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="legend" style={{marginTop:12}}>
+        Mostra o que cada um cravou. Os pontos dos especiais entram no ranking quando o curador lançar os resultados oficiais.
+      </div>
+    </div>
+  );
+}
+
+/* ---------- AUTH (modo real) ---------- */
+function Auth(){
+  const seen = (()=>{ try{ return !!localStorage.getItem("broslao_acct"); }catch(e){ return false; } })();
+  const [mode,setMode]=useState(seen ? "in" : "up");   // máquina nova → criar conta
+  const [email,setEmail]=useState(""); const [pass,setPass]=useState(""); const [err,setErr]=useState("");
+  const [keep,setKeep]=useState(true); const [busy,setBusy]=useState(false);
+  const remember=()=>{ try{ localStorage.setItem("broslao_acct","1"); }catch(e){} };
+  const signup = mode==="up";
+  const go=async()=>{
+    const mail=email.trim();
+    if(!mail || !pass){ setErr("Preencha e-mail e senha."); return; }
+    if(signup && pass.length<6){ setErr("A senha precisa ter ao menos 6 caracteres."); return; }
+    setErr(""); setBusy(true);
+    try{ await store.setKeepLogged(keep); }catch(e){ /* persistência é opcional, não bloqueia */ }
+    try{
+      signup ? await store.signUp(mail,pass) : await store.signIn(mail,pass);
+      remember();
+    }catch(e){ setErr(traduzErro(e.code||e.message)); }
+    setBusy(false);
+  };
+  return (
+    <div className="login">
+      <div className="login-hero">
+        <Confetti n={26}/>
+        <div className="lbrand">BROS<span className="d">.</span><span className="r">lão</span></div>
+        <div className="ltag">O bolão da Copa do Mundo 2026 entre amigos. Crave os placares, dispute os especiais e suba no ranking.</div>
+        <div className="lfeat">
+          <div>🏆 104 jogos — da fase de grupos à final</div>
+          <div>🥇 Campeão, artilheiro e líderes de grupo</div>
+          <div>📊 Ranking ao vivo: Conhecedores x Leigos</div>
+        </div>
+        <div className="login-art"><BallArt size={300}/></div>
+      </div>
+      <div className="login-form-wrap">
+        <div className="login-form">
+          <div className="fbrand">BROS<span className="d">.</span><span className="r">lão</span></div>
+          <div className="fsub">{signup ? "Primeiro acesso · crie sua conta" : "Bem-vindo de volta · entre na sua conta"}</div>
+          <div className="field"><label>E-mail</label>
+            <input className="input" type="email" value={email} onChange={e=>setEmail(e.target.value)}
+              placeholder="voce@email.com"/></div>
+          <div className="field"><label>{signup?"Crie uma senha":"Senha"}</label>
+            <input className="input" type="password" value={pass} onChange={e=>setPass(e.target.value)}
+              onKeyDown={e=>{ if(e.key==="Enter") go(); }}
+              placeholder={signup?"mínimo 6 caracteres":"••••••"}/></div>
+          <label className="keeprow"><input type="checkbox" checked={keep} onChange={e=>setKeep(e.target.checked)}/> Manter conectado neste aparelho</label>
+          {err && <div className="banner" style={{background:"rgba(229,72,77,.1)",borderColor:"rgba(229,72,77,.3)",color:"var(--live)"}}>{err}</div>}
+          <button className="btn prim" onClick={go} disabled={busy} style={{marginTop:4,opacity:busy?.6:1}}>
+            {busy ? "Aguarde…" : (signup?"Criar conta e entrar":"Entrar")}</button>
+          <button className="btn ghost" style={{marginTop:10}} onClick={()=>{ setErr(""); setMode(signup?"in":"up"); }}>
+            {signup?"Já tenho conta · Entrar":"Primeiro acesso? Criar conta"}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+function traduzErro(c){
+  c = String(c||"");
+  if(/email-already/.test(c))return "Esse e-mail já tem conta. Use 'Já tenho conta · Entrar'.";
+  if(/weak-password/.test(c))return "Senha muito curta (mín. 6 caracteres).";
+  if(/invalid-credential|wrong-password|user-not-found/.test(c))return "E-mail ou senha incorretos.";
+  if(/invalid-email/.test(c))return "E-mail inválido.";
+  if(/operation-not-allowed|configuration-not-found/.test(c))return "Login por e-mail/senha não está ativado no Firebase. Ative em Authentication → Sign-in method → Email/Password.";
+  if(/network-request-failed/.test(c))return "Falha de conexão. Verifique a internet e tente de novo.";
+  if(/too-many-requests/.test(c))return "Muitas tentativas. Aguarde um momento e tente de novo.";
+  return "Não foi possível entrar. Tente de novo. (" + c.replace("auth/","") + ")";
+}
+
+/* ============================================================
+   8. APP
+   ============================================================ */
+function App(){
+  const [user,setUser]=useState(undefined);     // undefined=carregando, null=deslogado
+  const [profile,setProfile]=useState(undefined);
+  const [participants,setParticipants]=useState([]);
+  const [pLoaded,setPLoaded]=useState(false);   // participantes já carregados do banco?
+  const [matches,setMatches]=useState(()=>mergeMatches([]));   // já começa com os 72 jogos-base
+  const [guesses,setGuesses]=useState([]);
+  const [specials,setSpecials]=useState([]);
+  const [official,setOfficial]=useState({});
+  const [tab,setTab]=useState("home");
+  const [now,setNow]=useState(Date.now());
+  const [savedId,setSavedId]=useState(null);
+  const [toast,setToast]=useState("");
+
+  useEffect(()=> store.onAuth(u=> setUser(u||null)),[]);
+  useEffect(()=>{ const t=setInterval(()=>setNow(Date.now()),20000); return ()=>clearInterval(t); },[]);
+  useEffect(()=>{
+    const subs=[store.subParticipants(d=>{ setParticipants(d.map(p=>({uid:p.id||p.uid,...p}))); setPLoaded(true); }),
+      store.subMatches(d=>setMatches(mergeMatches(d))), store.subGuesses(setGuesses),
+      store.subSpecials(setSpecials), store.subOfficial(setOfficial)];
+    const safety=setTimeout(()=>setPLoaded(true),5000); // não trava se o banco demorar
+    return ()=>{ subs.forEach(u=>u&&u()); clearTimeout(safety); };
+  },[]);
+
+  // perfil do usuário atual (só decide depois que os participantes carregarem)
+  useEffect(()=>{
+    if(!user){ setProfile(undefined); return; }
+    if(!pLoaded){ setProfile(undefined); return; }   // ainda carregando → não mostra cadastro à toa
+    const p=participants.find(x=>x.uid===user.uid);
+    setProfile(p||null);
+  },[user,participants,pLoaded]);
+
+  const guessMap=useMemo(()=>{const m={};guesses.forEach(g=>m[(g.uid)+"_"+(g.matchId)]={...g, a:cleanScore(g.a), b:cleanScore(g.b)});return m;},[guesses]);
+  const specialMap=useMemo(()=>{const m={};specials.forEach(s=>m[s.uid||s.id]=s);return m;},[specials]);
+  const ranking=useMemo(()=>buildRanking(participants,matches,guessMap,specialMap,official),
+    [participants,matches,guessMap,specialMap,official]);
+  const isAdmin = store.demo || (user && ADMIN_EMAILS.map(e=>e.toLowerCase()).includes((user.email||"").toLowerCase()));
+  const me = user?.uid;
+
+  const flash=(id)=>{ setSavedId(id); setTimeout(()=>setSavedId(s=>s===id?null:s),1600); };
+  const popToast=(t)=>{ setToast(t); setTimeout(()=>setToast(""),2200); };
+
+  const onSaveGuess=async(mId,g)=>{
+    const clean={a:cleanScore(g.a), b:cleanScore(g.b)};
+    try{ await store.saveGuess(me,mId,clean); flash(mId); }
+    catch(e){ popToast("⚠️ Não consegui salvar o palpite. Verifique a conexão."); }
+  };
+  const onSaveSpecial=async(d)=>{
+    try{ await store.saveSpecials(me,d); }
+    catch(e){ popToast("⚠️ Não consegui salvar. Tente de novo."); }
+  };
+  const onSaveMatch=(m)=>{ store.saveMatch(m); popToast("Jogo salvo"); };
+  const onDeleteMatch=(id)=>{ store.deleteMatch(id); popToast("Jogo excluído"); };
+  const onSaveResult=(id,a,b)=>{ store.saveMatch({id,resultA:a,resultB:b}); popToast("Resultado lançado · ranking atualizado"); };
+  const onSaveOfficial=(d)=>{ store.saveOfficial(d); popToast("Oficiais salvos"); };
+  const onAdminSaveGuess=async(uid,mId,g)=>{
+    const clean={a:cleanScore(g.a), b:cleanScore(g.b)};
+    try{ await store.saveGuess(uid,mId,clean); popToast("Palpite do jogador atualizado · ranking recalculado"); }
+    catch(e){ popToast("⚠️ Falha ao atualizar. Publique as regras de admin para guesses."); }
+  };
+  const onImport=()=>{ OFFICIAL_FIXTURES.forEach(f=> store.saveMatch({...f})); popToast("Tabela oficial importada · "+OFFICIAL_FIXTURES.length+" jogos"); };
+  const onProfileDone=(d)=> store.saveProfile(me,d);
+
+  if(user===undefined) return <div className="auth"><div className="hero"><span className="ballmark">⚽</span><div className="sub">Carregando…</div></div></div>;
+  if(!store.demo && user===null) return <Auth/>;
+  if(profile===null){
+    const jaSouParticipante = participants.some(p=>p.uid===me);
+    if(!jaSouParticipante && participants.length >= MAX_PLAYERS) return <PoolFull/>;
+    return <Onboarding onDone={onProfileDone}/>;
+  }
+  if(profile===undefined) return <div className="auth"><div className="hero"><span className="ballmark">⚽</span><div className="sub">Carregando…</div></div></div>;
+
+  return (
+    <>
+      <div className="topbar">
+        <div className="brand"><span className="logo"><BallArt size={28}/></span>
+          <span className="wm"><span className="b1">BROS</span><span className="dot">.</span><span className="b2">lão</span></span></div>
+        <nav className="nav">
+          <button className={"navlink"+(tab==="home"?" active":"")} onClick={()=>setTab("home")}><span className="ti">🏟️</span>Home</button>
+          <button className={"navlink"+(tab==="palpites"?" active":"")} onClick={()=>setTab("palpites")}><span className="ti">✍️</span>Palpites</button>
+          <button className={"navlink"+(tab==="ranking"?" active":"")} onClick={()=>setTab("ranking")}><span className="ti">🏆</span>Ranking</button>
+          <button className={"navlink"+(tab==="especiais"?" active":"")} onClick={()=>setTab("especiais")}><span className="ti">🔮</span>Especiais</button>
+          <button className={"navlink"+(tab==="regras"?" active":"")} onClick={()=>setTab("regras")}><span className="ti">📋</span>Regras</button>
+          {isAdmin && <button className={"navlink"+(tab==="admin"?" active":"")} onClick={()=>setTab("admin")}><span className="ti">🔧</span>Admin</button>}
+        </nav>
+        <div className="spacer"></div>
+        <span className="chip wc">🏆 Copa 2026</span>
+        {store.demo
+          ? <span className="chip" style={{color:"var(--canarinho)",borderColor:"var(--canarinho)"}}>DEMO</span>
+          : <button className="iconbtn" onClick={()=>store.signOut()}>Sair</button>}
+      </div>
+
+      {store.demo && <div className="wrap" style={{paddingBottom:0}}>
+        <div className="banner">▶️ Modo demonstração com dados de exemplo (em memória, somem ao recarregar). Preencha o <b>firebaseConfig</b> no topo do arquivo para ativar o bolão real com login e ranking ao vivo.</div>
+      </div>}
+
+      {tab==="home" && <Home matches={matches} now={now} ranking={ranking} me={me}
+        guessMap={guessMap} onSave={onSaveGuess} savedId={savedId}/>}
+      {tab==="palpites" && <MyPage matches={matches} now={now} me={me} guessMap={guessMap}
+        specialMap={specialMap} official={official} onSave={onSaveGuess} onSaveSpecial={onSaveSpecial} savedId={savedId}/>}
+      {tab==="ranking" && <Ranking ranking={ranking} me={me} matches={matches} now={now}
+        guessMap={guessMap} specialMap={specialMap} official={official}/>}
+      {tab==="especiais" && <SpecialsBoard participants={participants} specialMap={specialMap}
+        matches={matches} now={now} me={me}/>}
+      {tab==="regras" && <Regras/>}
+      {tab==="admin" && isAdmin && <Admin matches={matches} official={official} participants={participants}
+        guessMap={guessMap} now={now} onSaveGuessFor={onAdminSaveGuess}
+        onImport={onImport} onSaveMatch={onSaveMatch} onDeleteMatch={onDeleteMatch} onSaveResult={onSaveResult} onSaveOfficial={onSaveOfficial}/>}
+
+      <div style={{textAlign:"center",color:"var(--muted-2)",fontSize:"12px",padding:"26px 0 34px"}}>BROS<span style={{color:"var(--redlao)"}}>.lão</span> · {BUILD}</div>
+      <Toast msg={toast}/>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
