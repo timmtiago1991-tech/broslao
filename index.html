@@ -151,6 +151,30 @@ a{color:var(--celeste)}
 .rb.V{background:var(--green)} .rb.E{background:var(--muted-2)} .rb.D{background:var(--live)}
 .refscore{font-family:'Archivo';font-weight:900;font-variant-numeric:tabular-nums;font-size:16px}
 .refopp{color:var(--muted);font-weight:600;display:flex;align-items:center;gap:7px;margin-left:auto}
+.seeguesses{margin-left:auto;border:1px solid var(--line);background:var(--card);color:var(--blue);
+  font-family:inherit;font-size:11px;font-weight:800;padding:4px 9px;border-radius:999px;cursor:pointer}
+.seeguesses:hover{background:rgba(37,99,235,.08)}
+.gtab{margin-top:14px;padding:14px 16px}
+.gtab-h{font-family:'Archivo';font-weight:900;font-size:15px;margin-bottom:3px}
+.gtab-sub{font-size:11.5px;color:var(--muted);margin-bottom:10px;line-height:1.4}
+table.gt{width:100%;border-collapse:collapse;font-size:13px}
+table.gt th{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:800;padding:4px 5px;text-align:center}
+table.gt th.l{text-align:left;padding-left:2px}
+table.gt td{padding:7px 5px;text-align:center;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+table.gt td.l{text-align:left;padding-left:2px}
+table.gt td.pos{color:var(--muted);font-weight:800;width:20px}
+table.gt td.pp{font-family:'Archivo';font-weight:900;color:var(--chalk)}
+table.gt tr.q td.pos{color:var(--green)}
+table.gt tr.q{box-shadow:inset 3px 0 0 var(--green)}
+.gtteam{display:inline-flex;align-items:center;gap:8px}
+.glist{display:flex;flex-direction:column;gap:1px}
+.grow{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--line)}
+.grow:last-child{border-bottom:none}
+.grow.cravou{background:rgba(34,197,94,.07);border-radius:8px}
+.grow .gn{font-weight:700;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.grow .gg{font-family:'Archivo';font-weight:900;font-variant-numeric:tabular-nums;min-width:46px;text-align:center}
+.grow .gpt{font-family:'Archivo';font-weight:900;font-size:13px;min-width:48px;text-align:right}
+.grow .gpt.pos{color:var(--green)} .grow .gpt.zero{color:var(--muted-2)}
 
 /* ---------- Ranking ---------- */
 .rank-hero{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;-webkit-overflow-scrolling:touch}
@@ -487,7 +511,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v23 · retrospecto";
+const BUILD = "v24 · simulação + palpites";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -845,6 +869,7 @@ function makeFirebaseStore(){
     subSpecials:(cb)=> sub("specials",cb),
     subOfficial:(cb)=> db.collection("meta").doc("official").onSnapshot(d=> cb(d.exists?d.data():{})),
     saveProfile:(uid,d)=> db.collection("participants").doc(uid).set(d,{merge:true}),
+    getProfile:(uid)=> db.collection("participants").doc(uid).get().then(s=> s.exists?{uid:s.id,...s.data()}:null),
     saveGuess:(uid,mId,g)=> db.collection("guesses").doc(uid+"_"+mId).set({uid,matchId:mId,...g},{merge:true}),
     saveSpecials:(uid,d)=> db.collection("specials").doc(uid).set(d,{merge:true}),
     saveMatch:(m)=>{ const ref=m.id?db.collection("matches").doc(m.id):db.collection("matches").doc();
@@ -893,6 +918,7 @@ function makeDemoStore(){
     subOfficial:(cb)=>{listeners.official.push(cb);cb(clone(state.official[0]));return ()=>{};},
     saveProfile:(uid,d)=>{const p=state.participants.find(x=>x.uid===uid);
       if(p)Object.assign(p,d);else state.participants.push({uid,...d});ping("participants");},
+    getProfile:(uid)=> Promise.resolve(state.participants.find(x=>x.uid===uid)||null),
     saveGuess:(uid,mId,g)=>{let q=state.guesses.find(x=>x.uid===uid&&x.matchId===mId);
       if(q)Object.assign(q,g);else state.guesses.push({uid,matchId:mId,...g});ping("guesses");},
     saveSpecials:(uid,d)=>{let s=state.specials.find(x=>x.uid===uid);
@@ -963,11 +989,12 @@ function countdownLabel(m, now){
   return {t: d>0 ? d+"d "+h+"h" : (h>0 ? h+"h "+mm+"min" : mm+"min"), c:"open"};
 }
 
-function MatchCard({m, now, guess, onSave, editable, ptResult, showSaved, allMatches}){
+function MatchCard({m, now, guess, onSave, editable, ptResult, showSaved, allMatches, participants, guessMap}){
   const [a,setA]=useState(guess?.a ?? "");
   const [b,setB]=useState(guess?.b ?? "");
   const editing=useRef(false);
   const [showRef,setShowRef]=useState(false);
+  const [showGuesses,setShowGuesses]=useState(false);
   useEffect(()=>{ if(editing.current) return; setA(guess?.a ?? ""); setB(guess?.b ?? ""); },[guess?.a,guess?.b]);
   const locked = !editable;
   const st=matchStatus(m,now);
@@ -1004,6 +1031,8 @@ function MatchCard({m, now, guess, onSave, editable, ptResult, showSaved, allMat
         <div className="official">
           <span className="lab">Resultado oficial</span>
           <span className="res num">{m.resultA} × {m.resultB}</span>
+          {participants && guessMap &&
+            <button className="seeguesses" onClick={(e)=>{e.stopPropagation();setShowGuesses(true);}}>👥 palpites</button>}
         </div>}
       {((editable && guess && guess.a!=null && guess.b!=null) || ptResult!==undefined || showSaved) &&
         <div className="match-foot">
@@ -1019,6 +1048,7 @@ function MatchCard({m, now, guess, onSave, editable, ptResult, showSaved, allMat
             : (showSaved ? <span className="savep show">salvo ✓</span> : null)}
         </div>}
       {showRef && <RefSheet m={m} allMatches={allMatches} onClose={()=>setShowRef(false)}/>}
+      {showGuesses && <GuessesSheet m={m} participants={participants} guessMap={guessMap} onClose={()=>setShowGuesses(false)}/>}
     </div>
   );
 }
@@ -1055,6 +1085,76 @@ function RefSheet({m, allMatches, onClose}){
         <Block team={m.teamA}/>
         <Block team={m.teamB}/>
         <button className="btn ghost" style={{marginTop:16}} onClick={(e)=>{e.stopPropagation();onClose();}}>Fechar</button>
+      </div>
+    </div>
+  );
+}
+
+/* Classificação simulada do grupo: usa resultado oficial quando há, senão o palpite do usuário */
+function GroupTable({group, matches, guessMap, me}){
+  const games=matches.filter(m=> m.phase==="grupos" && m.group===group);
+  if(!games.length) return null;
+  const teams=[...new Set(games.flatMap(g=>[g.teamA,g.teamB]))];
+  const row={}; teams.forEach(t=> row[t]={team:t,P:0,J:0,V:0,E:0,D:0,gf:0,ga:0});
+  let sim=0, oficiais=0;
+  games.forEach(g=>{
+    let ra=g.resultA, rb=g.resultB, isSim=false;
+    if(ra==null||rb==null){
+      const gu=guessMap[me+"_"+g.id];
+      if(gu && gu.a!=null && gu.b!=null){ ra=+gu.a; rb=+gu.b; isSim=true; } else return;
+    }
+    isSim?sim++:oficiais++;
+    const A=row[g.teamA], B=row[g.teamB];
+    A.J++;B.J++;A.gf+=ra;A.ga+=rb;B.gf+=rb;B.ga+=ra;
+    if(ra>rb){A.V++;B.D++;A.P+=3;} else if(ra<rb){B.V++;A.D++;B.P+=3;} else {A.E++;B.E++;A.P++;B.P++;}
+  });
+  const rows=teams.map(t=>({...row[t],sg:row[t].gf-row[t].ga}))
+    .sort((x,y)=> y.P-x.P || y.sg-x.sg || y.gf-x.gf || x.team.localeCompare(y.team,"pt"));
+  return (
+    <div className="card narrow gtab">
+      <div className="gtab-h">📊 Classificação simulada · Grupo {group}</div>
+      <div className="gtab-sub">Jogos sem resultado oficial usam o <b>seu palpite</b>. Os 2 primeiros avançam. ({oficiais} oficial{oficiais!==1?"s":""} · {sim} simulado{sim!==1?"s":""})</div>
+      <table className="gt">
+        <thead><tr><th></th><th className="l">Time</th><th>P</th><th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th></tr></thead>
+        <tbody>
+          {rows.map((r,i)=>(
+            <tr key={r.team} className={i<2?"q":""}>
+              <td className="pos">{i+1}</td>
+              <td className="l"><span className="gtteam"><Flag name={r.team}/> <b>{teamInfo(r.team).c}</b></span></td>
+              <td className="pp">{r.P}</td><td>{r.J}</td><td>{r.V}</td><td>{r.E}</td><td>{r.D}</td>
+              <td>{r.sg>0?"+"+r.sg:r.sg}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/* Palpites de todos num jogo já realizado + pontos feitos */
+function GuessesSheet({m, participants, guessMap, onClose}){
+  const rows=(participants||[]).map(p=>{
+    const g=guessMap[p.uid+"_"+m.id];
+    const has=g && g.a!=null && g.b!=null;
+    const r=scoreMatch(g,m);
+    return { nick:p.nickname||"—", a:has?g.a:null, b:has?g.b:null, pts:r?r.pts:0, exact:r?r.exact:false, has:!!has };
+  }).sort((x,y)=> y.pts-x.pts || (y.exact?1:0)-(x.exact?1:0) || (x.has?0:1)-(y.has?0:1) || x.nick.localeCompare(y.nick,"pt"));
+  return (
+    <div className="overlay" onClick={(e)=>{e.stopPropagation();onClose();}}>
+      <div className="sheet" onClick={e=>e.stopPropagation()}>
+        <div className="grab"></div>
+        <h2 style={{marginBottom:4}}>Palpites do jogo</h2>
+        <div className="note" style={{marginBottom:10}}>{teamInfo(m.teamA).c} <b>{m.resultA} × {m.resultB}</b> {teamInfo(m.teamB).c} · resultado oficial</div>
+        <div className="glist">
+          {rows.map((r,i)=>(
+            <div className={"grow"+(r.exact?" cravou":"")} key={i}>
+              <span className="gn">{r.nick}</span>
+              <span className="gg">{r.has ? (r.a+" - "+r.b) : <span style={{color:"var(--muted-2)"}}>sem palpite</span>}</span>
+              <span className={"gpt "+(r.pts>0?"pos":"zero")}>{r.pts>0?"+"+r.pts:"0"}{r.exact?" ⭐":""}</span>
+            </div>
+          ))}
+        </div>
+        <button className="btn ghost" style={{marginTop:14}} onClick={(e)=>{e.stopPropagation();onClose();}}>Fechar</button>
       </div>
     </div>
   );
@@ -1261,7 +1361,7 @@ function Home({matches, now, ranking, me, guessMap, onSave, savedId}){
 /* ---------- MEUS PALPITES ---------- */
 const PHASE_SHORT = {grupos:"Grupos", r32:"Round of 32", oitavas:"Oitavas", quartas:"Quartas", semis:"Semis", terceiro:"3º lugar", final:"Final"};
 
-function MyPage({matches, now, me, guessMap, specialMap, official, onSave, onSaveSpecial, savedId}){
+function MyPage({matches, now, me, guessMap, specialMap, official, onSave, onSaveSpecial, savedId, participants}){
   const [tab,setTab]=useState("jogos");
   const [phase,setPhase]=useState("grupos");
   const [group,setGroup]=useState("A");
@@ -1338,9 +1438,13 @@ function MyPage({matches, now, me, guessMap, specialMap, official, onSave, onSav
           ? <div className="matchgrid">
               {visible.map(m=>(
                 <MatchCard key={m.id} m={m} now={now} guess={guessMap[me+"_"+m.id]} allMatches={matches}
+                  participants={participants} guessMap={guessMap}
                   editable={!isLocked(m,now)} onSave={onSave} showSaved={savedId===m.id}/>))}
             </div>
           : <div className="empty">Os jogos desta fase ainda não foram cadastrados pelo curador.</div>}
+
+        {grouped && visible.length>0 &&
+          <GroupTable group={group} matches={matches} guessMap={guessMap} me={me}/>}
       </>}
 
       {tab==="especiais" && <div className="narrow"><Specials
@@ -1354,6 +1458,7 @@ function MyPage({matches, now, me, guessMap, specialMap, official, onSave, onSav
               {closed.map(m=>{
                 const r=myScore.perMatch[m.id];
                 return <MatchCard key={m.id} m={m} now={now} guess={guessMap[me+"_"+m.id]} editable={false}
+                  participants={participants} guessMap={guessMap}
                   ptResult={r===undefined?null:r}/>;
               })}
             </div>
@@ -2023,6 +2128,7 @@ function App(){
   const [toast,setToast]=useState("");
 
   useEffect(()=> store.onAuth(u=> setUser(u||null)),[]);
+  useEffect(()=>{ store.setKeepLogged(true).catch(()=>{}); },[]);   // mantém sessão por padrão (menos re-login)
   useEffect(()=>{ const t=setInterval(()=>setNow(Date.now()),20000); return ()=>clearInterval(t); },[]);
   useEffect(()=>{
     const subs=[store.subParticipants(d=>{ setParticipants(d.map(p=>({uid:p.id||p.uid,...p}))); setPLoaded(true); }),
@@ -2032,13 +2138,21 @@ function App(){
     return ()=>{ subs.forEach(u=>u&&u()); clearTimeout(safety); };
   },[]);
 
-  // perfil do usuário atual (só decide depois que os participantes carregarem)
+  // perfil: leitura DIRETA e autoritativa do doc do usuário → não mostra "montar avatar" à toa
   useEffect(()=>{
     if(!user){ setProfile(undefined); return; }
-    if(!pLoaded){ setProfile(undefined); return; }   // ainda carregando → não mostra cadastro à toa
-    const p=participants.find(x=>x.uid===user.uid);
-    setProfile(p||null);
-  },[user,participants,pLoaded]);
+    let alive=true; setProfile(undefined);
+    store.getProfile(user.uid)
+      .then(p=>{ if(alive) setProfile(p); })                       // objeto = tem perfil; null = novo
+      .catch(()=>{ if(alive) setProfile(prev=> prev===undefined ? null : prev); });
+    return ()=>{ alive=false; };
+  },[user]);
+  // auto-heal: se a lista de participantes traz o usuário, promove para perfil (cobre cache/offline)
+  useEffect(()=>{
+    if(!user) return;
+    const lp=participants.find(x=>x.uid===user.uid);
+    if(lp) setProfile(prev=> (prev && prev.uid) ? prev : lp);
+  },[user,participants]);
 
   const guessMap=useMemo(()=>{const m={};guesses.forEach(g=>m[(g.uid)+"_"+(g.matchId)]={...g, a:cleanScore(g.a), b:cleanScore(g.b)});return m;},[guesses]);
   const specialMap=useMemo(()=>{const m={};specials.forEach(s=>m[s.uid||s.id]=s);return m;},[specials]);
@@ -2069,7 +2183,7 @@ function App(){
     catch(e){ popToast("⚠️ Falha ao atualizar. Publique as regras de admin para guesses."); }
   };
   const onImport=()=>{ OFFICIAL_FIXTURES.forEach(f=> store.saveMatch({...f})); popToast("Tabela oficial importada · "+OFFICIAL_FIXTURES.length+" jogos"); };
-  const onProfileDone=(d)=> store.saveProfile(me,d);
+  const onProfileDone=(d)=> Promise.resolve(store.saveProfile(me,d)).then(()=> setProfile({uid:me,...d}));
 
   if(user===undefined) return <div className="auth"><div className="hero"><span className="ballmark">⚽</span><div className="sub">Carregando…</div></div></div>;
   if(!store.demo && user===null) return <Auth/>;
@@ -2106,7 +2220,7 @@ function App(){
 
       {tab==="home" && <Home matches={matches} now={now} ranking={ranking} me={me}
         guessMap={guessMap} onSave={onSaveGuess} savedId={savedId}/>}
-      {tab==="palpites" && <MyPage matches={matches} now={now} me={me} guessMap={guessMap}
+      {tab==="palpites" && <MyPage matches={matches} now={now} me={me} guessMap={guessMap} participants={participants}
         specialMap={specialMap} official={official} onSave={onSaveGuess} onSaveSpecial={onSaveSpecial} savedId={savedId}/>}
       {tab==="ranking" && <Ranking ranking={ranking} me={me} matches={matches} now={now}
         guessMap={guessMap} specialMap={specialMap} official={official}/>}
