@@ -511,7 +511,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v24 · simulação + palpites";
+const BUILD = "v25 · curador especiais";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -1468,7 +1468,7 @@ function MyPage({matches, now, me, guessMap, specialMap, official, onSave, onSav
   );
 }
 
-function Specials({defs, groups, matches, value, locked, official, onSave}){
+function Specials({defs, groups, matches, value, locked, official, onSave, adminName}){
   const [v,setV]=useState(value);
   useEffect(()=>setV(value),[JSON.stringify(value)]);
   const set=(k,val)=>{ const nv={...v,[k]:val}; setV(nv); onSave(nv); };
@@ -1478,7 +1478,9 @@ function Specials({defs, groups, matches, value, locked, official, onSave}){
   const teamsOf=(g)=> [...new Set(matches.filter(m=>m.group===g).flatMap(m=>[m.teamA,m.teamB]))].sort((a,b)=>a.localeCompare(b,"pt"));
   return (
     <>
-      <div className="banner">⏱️ Os especiais podem ser preenchidos/editados até {fmtBRT(SPECIALS_LOCK)} BRT. Depois disso ficam visíveis a todos e são apurados no fim do torneio.</div>
+      {adminName
+        ? <div className="banner" style={{background:"rgba(37,99,235,.08)",borderColor:"rgba(37,99,235,.3)"}}>🛠️ Modo curador · editando os especiais de <b>{adminName}</b>. O fechamento é ignorado e cada alteração é salva na hora.</div>
+        : <div className="banner">⏱️ Os especiais podem ser preenchidos/editados até {fmtBRT(SPECIALS_LOCK)} BRT. Depois disso ficam visíveis a todos e são apurados no fim do torneio.</div>}
       <div className="sect-h"><h2>Palpites especiais</h2></div>
       {defs.map(s=>(
         <div className="field" key={s.key}>
@@ -1985,7 +1987,8 @@ function Regras(){
 }
 
 /* ---------- ESPECIAIS DE TODOS (quadro) ---------- */
-function SpecialsBoard({participants, specialMap, matches, now, me}){
+function SpecialsBoard({participants, specialMap, matches, now, me, isAdmin, official, onAdminSaveSpecial}){
+  const [selUid,setSelUid]=useState("");
   const revealMs = specialsRevealMs();
   const revealed = now >= revealMs;
   const groups=[...new Set(matches.filter(m=>m.phase==="grupos"&&m.group).map(m=>m.group))].sort();
@@ -1997,9 +2000,28 @@ function SpecialsBoard({participants, specialMap, matches, now, me}){
   const cellVal=(p,row)=>{ const sp=specialMap[p.uid]||{};
     return row.leader ? ((sp.leaders||{})[row.leader]||"") : (sp[row.key]||""); };
 
+  const adminPanel = isAdmin ? (
+    <div className="card narrow" style={{marginBottom:16,padding:"14px 18px"}}>
+      <div className="sect-h" style={{marginTop:0}}><h2>🛠️ Curador · editar especiais</h2></div>
+      <div className="note" style={{marginBottom:10}}>Escolha um participante para editar os palpites especiais dele — mesmo após o fechamento.</div>
+      <div className="field" style={{marginBottom:selUid?14:0}}>
+        <label>Participante</label>
+        <select className="input" value={selUid} onChange={e=>setSelUid(e.target.value)}>
+          <option value="">— escolha um participante —</option>
+          {cols.map(p=><option key={p.uid} value={p.uid}>{p.nickname}</option>)}
+        </select>
+      </div>
+      {selUid && <Specials defs={SPECIAL_DEFS} groups={groups} matches={matches}
+        value={specialMap[selUid]||{}} locked={false} official={official}
+        adminName={(participants.find(p=>p.uid===selUid)||{}).nickname||""}
+        onSave={d=>onAdminSaveSpecial(selUid,d)}/>}
+    </div>
+  ) : null;
+
   if(!revealed){
     return (
       <div className="wrap narrow">
+        {adminPanel}
         <div className="rules-hero"><BallArt size={60}/>
           <div><div className="rt">Especiais de todos</div>
             <div className="rs">Revelados quando a bola rolar no primeiro jogo.</div></div></div>
@@ -2011,6 +2033,7 @@ function SpecialsBoard({participants, specialMap, matches, now, me}){
   }
   return (
     <div className="wrap">
+      {adminPanel}
       <div className="sect-h"><h2>Palpites especiais de todos</h2><span className="note">{cols.length} participantes</span></div>
       <div className="sboard-wrap">
         <table className="sboard">
@@ -2173,6 +2196,11 @@ function App(){
     try{ await store.saveSpecials(me,d); }
     catch(e){ popToast("⚠️ Não consegui salvar. Tente de novo."); }
   };
+  const onAdminSaveSpecial=async(uid,d)=>{
+    try{ await store.saveSpecials(uid,d);
+      popToast("Especiais de "+((participants.find(p=>p.uid===uid)||{}).nickname||"jogador")+" atualizados"); }
+    catch(e){ popToast("⚠️ Falha ao salvar. Publique as regras de admin para specials."); }
+  };
   const onSaveMatch=(m)=>{ store.saveMatch(m); popToast("Jogo salvo"); };
   const onDeleteMatch=(id)=>{ store.deleteMatch(id); popToast("Jogo excluído"); };
   const onSaveResult=(id,a,b)=>{ store.saveMatch({id,resultA:a,resultB:b}); popToast("Resultado lançado · ranking atualizado"); };
@@ -2225,7 +2253,7 @@ function App(){
       {tab==="ranking" && <Ranking ranking={ranking} me={me} matches={matches} now={now}
         guessMap={guessMap} specialMap={specialMap} official={official}/>}
       {tab==="especiais" && <SpecialsBoard participants={participants} specialMap={specialMap}
-        matches={matches} now={now} me={me}/>}
+        matches={matches} now={now} me={me} isAdmin={isAdmin} official={official} onAdminSaveSpecial={onAdminSaveSpecial}/>}
       {tab==="regras" && <Regras/>}
       {tab==="admin" && isAdmin && <Admin matches={matches} official={official} participants={participants}
         guessMap={guessMap} now={now} onSaveGuessFor={onAdminSaveGuess}
