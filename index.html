@@ -511,7 +511,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v25 · curador especiais";
+const BUILD = "v26 · fix dropdown curador";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -2001,7 +2001,7 @@ function SpecialsBoard({participants, specialMap, matches, now, me, isAdmin, off
     return row.leader ? ((sp.leaders||{})[row.leader]||"") : (sp[row.key]||""); };
 
   const adminPanel = isAdmin ? (
-    <div className="card narrow" style={{marginBottom:16,padding:"14px 18px"}}>
+    <div className="card narrow" style={{marginBottom:16,padding:"14px 18px",overflow:"visible"}}>
       <div className="sect-h" style={{marginTop:0}}><h2>🛠️ Curador · editar especiais</h2></div>
       <div className="note" style={{marginBottom:10}}>Escolha um participante para editar os palpites especiais dele — mesmo após o fechamento.</div>
       <div className="field" style={{marginBottom:selUid?14:0}}>
