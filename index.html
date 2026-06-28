@@ -519,7 +519,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v28 · acertos nos especiais";
+const BUILD = "v29 · 1/16 de final";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -588,6 +588,31 @@ const OFFICIAL_FIXTURES = [
   F("L","Panamá","Inglaterra","06-27 18:00"), F("L","Croácia","Gana","06-27 18:00"),
 ];
 
+// Mata-mata (definido no código conforme as fases vão sendo confirmadas). group:"" para não afetar a classificação dos grupos.
+// venue é setado direto no objeto. dt = "MM-DD HH:MM" em BRT.
+const K = (phase,teamA,teamB,dt,venue)=>({phase,group:"",teamA,teamB,
+  kickoffISO:"2026-"+dt.slice(0,5)+"T"+dt.slice(6)+":00-03:00", venue, resultA:null, resultB:null});
+
+// 1/16 de final (Round of 32) — confronto/data/sede confirmados (BRT = ET + 1h).
+const R32_FIXTURES = [
+  K("r32","África do Sul","Canadá","06-28 16:00","SoFi · Inglewood"),
+  K("r32","Brasil","Japão","06-29 14:00","NRG · Houston"),
+  K("r32","Alemanha","Paraguai","06-29 17:30","Gillette · Boston"),
+  K("r32","Holanda","Marrocos","06-29 22:00","Estadio BBVA · Monterrey"),
+  K("r32","Costa do Marfim","Noruega","06-30 14:00","AT&T · Arlington"),
+  K("r32","França","Suécia","06-30 18:00","MetLife · Nova Jersey"),
+  K("r32","México","Equador","06-30 22:00","Estadio Azteca · Cidade do México"),
+  K("r32","Inglaterra","RD Congo","07-01 13:00","Mercedes-Benz · Atlanta"),
+  K("r32","Bélgica","Senegal","07-01 17:00","Lumen Field · Seattle"),
+  K("r32","Estados Unidos","Bósnia e Herzegovina","07-01 21:00","Levi's · Santa Clara"),
+  K("r32","Espanha","Áustria","07-02 16:00","SoFi · Inglewood"),
+  K("r32","Portugal","Croácia","07-02 20:00","BMO Field · Toronto"),
+  K("r32","Suíça","Argélia","07-03 00:00","BC Place · Vancouver"),
+  K("r32","Austrália","Egito","07-03 15:00","AT&T · Arlington"),
+  K("r32","Argentina","Cabo Verde","07-03 19:00","Hard Rock · Miami"),
+  K("r32","Colômbia","Gana","07-03 22:30","Arrowhead · Kansas City"),
+];
+
 // Seleção -> sigla (FIFA) e código ISO para a bandeira (flagcdn.com)
 const TEAMS = {
   "México":{c:"MEX",iso:"mx"},"África do Sul":{c:"RSA",iso:"za"},"Coreia do Sul":{c:"KOR",iso:"kr"},"Chéquia":{c:"CZE",iso:"cz"},
@@ -648,7 +673,10 @@ const ALL_TEAMS = Object.keys(TEAMS).sort((a,b)=>a.localeCompare(b,"pt"));
 
 // Jogos-base da fase de grupos (definidos no código, ids estáveis g0..g71).
 // Sempre aparecem; o Firestore guarda só os resultados (e jogos de mata-mata adicionados).
-const BASE_MATCHES = OFFICIAL_FIXTURES.map((f,i)=>({...f, id:"g"+i}));
+const BASE_MATCHES = [
+  ...OFFICIAL_FIXTURES.map((f,i)=>({...f, id:"g"+i})),
+  ...R32_FIXTURES.map((f,i)=>({...f, id:"k"+i})),
+];
 
 // Mescla os jogos-base com os documentos do banco (resultados sobrescrevem; novos jogos são adicionados).
 function mergeMatches(remote){
