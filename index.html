@@ -189,6 +189,9 @@ table.gt tr.q{box-shadow:inset 3px 0 0 var(--green)}
 .rrow{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
 .rrow:last-child{border-bottom:none}
 .rrow .rk{font-family:'Archivo';font-weight:900;font-size:15px;width:22px;color:var(--muted);text-align:center}
+.rkwrap{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;width:28px;flex:none}
+.mv{font-family:'Archivo';font-weight:900;font-size:10px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.2px}
+.mv-up{color:var(--green)} .mv-down{color:var(--live)} .mv-flat{color:var(--muted-2);font-weight:700}
 .rrow.me{box-shadow:inset 3px 0 0 var(--blue)}
 
 /* ---------- Ranking zones ---------- */
@@ -519,7 +522,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v29 · 1/16 de final";
+const BUILD = "v30 · movimentação no ranking";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -1545,11 +1548,35 @@ function Specials({defs, groups, matches, value, locked, official, onSave, admin
 }
 
 /* ---------- RANKING ---------- */
+function MoveBadge({d}){
+  if(!d) return <span className="mv mv-flat">–</span>;
+  const up=d>0;
+  return <span className={"mv "+(up?"mv-up":"mv-down")}>{up?"↑":"↓"}{Math.abs(d)}</span>;
+}
+
 function Ranking({ranking, me, matches, now, guessMap, specialMap, official}){
   const [sel,setSel]=useState(null);
+
+  // Posição ANTES do último jogo lançado (o de kickoff mais recente). Recalcula o ranking sem ele.
+  const prevPos = useMemo(()=>{
+    const resolved = matches.filter(m=> m.resultA!=null && m.resultB!=null);
+    if(!resolved.length) return null;
+    const maxKick = resolved.reduce((mx,m)=> m.kickoffISO>mx? m.kickoffISO : mx, resolved[0].kickoffISO);
+    const latestIds = new Set(resolved.filter(m=> m.kickoffISO===maxKick).map(m=>m.id));
+    if(resolved.length - latestIds.size === 0) return null;   // primeira leva de jogos: nada a comparar
+    const prevMatches = matches.map(m=> latestIds.has(m.id) ? {...m, resultA:null, resultB:null} : m);
+    const prev = buildRanking(ranking, prevMatches, guessMap, specialMap, official);
+    const pos={}; prev.forEach((p,i)=> pos[p.uid]=i+1);
+    return pos;
+  },[matches, guessMap, specialMap, official, ranking]);
+  const deltaOf = (uid,curPos)=> (prevPos && uid in prevPos) ? (prevPos[uid]-curPos) : 0;
+
   const Row = (p,i)=>(
     <div key={p.uid} className={"rrow"+(p.uid===me?" me":"")} onClick={()=>setSel(p)}>
-      <span className="rk">{i+1}</span>
+      <span className="rkwrap">
+        <span className="rk">{i+1}</span>
+        <MoveBadge d={deltaOf(p.uid,i+1)}/>
+      </span>
       <Avatar avatar={p.avatar} size={40}/>
       <div className="info">
         <div className="nm">{p.nickname} {p.uid===me && <span className="you-pill">VOCÊ</span>}</div>
