@@ -498,7 +498,10 @@ table.gt tr.q{box-shadow:inset 3px 0 0 var(--green)}
 .scl{display:flex;align-items:center;gap:9px;font-size:12px}
 .scl .sc{font-family:'Archivo';font-weight:900;width:42px;font-variant-numeric:tabular-nums}
 .scl .track{flex:1;height:7px;border-radius:99px;background:var(--surface-2);overflow:hidden}
-.scl .fill{height:100%;background:linear-gradient(90deg,var(--blue),#5b8cf5);border-radius:99px}
+.scl .fill{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--blue),#5b8cf5);transition:width .4s ease}
+.scl .fill.r0{background:linear-gradient(90deg,#15803D,#22C55E)}
+.scl .fill.r1{background:linear-gradient(90deg,#D89E00,#F2B705)}
+.scl .fill.r2{background:linear-gradient(90deg,#2563EB,#5B8CF5)}
 .scl .pct{width:40px;text-align:right;color:var(--muted);font-weight:700}
 
 </style>
@@ -522,7 +525,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v30 · movimentação no ranking";
+const BUILD = "v31 · barras de consenso";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -1279,10 +1282,10 @@ function LiveGuessCard({m, people, guessMap}){
           </div>
           {topScores.length>0 &&
             <div className="scores">
-              {topScores.map(([k,c])=>(
+              {topScores.map(([k,c],i)=>(
                 <div className="scl" key={k}>
                   <span className="sc">{k.replace("-"," - ")}</span>
-                  <span className="track"><span className="fill" style={{width:Math.round(c/n*100)+"%"}}/></span>
+                  <span className="track"><span className={"fill r"+i} style={{width:Math.round(c/n*100)+"%"}}/></span>
                   <span className="pct">{Math.round(c/n*100)}%</span>
                 </div>
               ))}
