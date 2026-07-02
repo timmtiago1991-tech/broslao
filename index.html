@@ -7,7 +7,7 @@
 <title>BROS.lão · Copa 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <!-- tema (aplica antes de pintar, evita flash) -->
 <script>try{if(localStorage.getItem("broslao_theme")==="dark")document.documentElement.dataset.theme="dark";}catch(e){}</script>
@@ -24,34 +24,37 @@
 
 <style>
 :root{
-  --night:#F1F3F6; --surface:#FFFFFF; --surface-2:#F6F7F9; --line:#E6E8EC;
-  --chalk:#1F2533; --muted:#6B7280; --muted-2:#9AA1AD;
-  --canarinho:#F2B705; --canarinho-deep:#D89E00; --green:#16A34A;
-  --celeste:#2E86C7; --celeste-deep:#1F6FA8;
-  --live:#E5484D; --gold:#D89E00;
-  --redlao:#D7263D; --dotblack:#16181D;
-  --blue:#2563EB; --blue-deep:#1D4ED8; --blue-soft:#EAF1FE; --amber:#D97706;
-  --r:14px;
+  --night:#F4F1E9; --surface:#FBF9F3; --surface-2:#F1ECE0; --line:#E7E0D0;
+  --chalk:#1F2318; --muted:#6E6A5C; --muted-2:#9C9686;
+  --canarinho:#E3A008; --canarinho-deep:#C8871A; --green:#0E8A43;
+  --celeste:#2E7BC4; --celeste-deep:#1F6FA8;
+  --live:#C8452F; --gold:#C8871A;
+  --redlao:#C8452F; --dotblack:#1F2318;
+  --blue:#2A54D6; --blue-deep:#1E42B8; --blue-soft:#E9EDFB; --amber:#C87B12;
+  --r:16px;
 }
 html[data-theme="dark"]{
   color-scheme:dark;
-  --night:#0F1216; --surface:#181C22; --surface-2:#1F242C; --line:#2B313B;
-  --chalk:#E7EAF0; --muted:#9BA3B2; --muted-2:#6C7482;
-  --blue-soft:#17233A; --dotblack:#E7EAF0;
+  --night:#131412; --surface:#1D1E1B; --surface-2:#26271F; --line:#2E2F29;
+  --chalk:#F3F1E8; --muted:#9C988A; --muted-2:#6E6B5E;
+  --canarinho:#F0B429; --canarinho-deep:#F0B429; --green:#35C46E;
+  --celeste:#5B9BE0; --celeste-deep:#5B9BE0; --live:#E0654E; --gold:#F0B429;
+  --blue:#5B84F0; --blue-deep:#4A6FDB; --blue-soft:#1E2740; --amber:#E0954E;
+  --dotblack:#F3F1E8;
 }
-html[data-theme="dark"] .input,html[data-theme="dark"] select.input{background:#1F242C}
-html[data-theme="dark"] .scorebox,html[data-theme="dark"] .scorebox:disabled{background:#1F242C;color:var(--chalk)}
+html[data-theme="dark"] .input,html[data-theme="dark"] select.input{background:#26271F}
+html[data-theme="dark"] .scorebox,html[data-theme="dark"] .scorebox:disabled{background:#26271F;color:var(--chalk)}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
   background:var(--night);
   color:var(--chalk);
-  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  font-family:'Space Grotesk','Inter',system-ui,-apple-system,sans-serif;
   -webkit-font-smoothing:antialiased;
   min-height:100vh;
 }
 #root{max-width:1200px;margin:0 auto;padding:0 24px 64px}
-h1,h2,h3,.disp{font-family:'Archivo',sans-serif;letter-spacing:-.01em}
+h1,h2,h3,.disp{font-family:'Bricolage Grotesque','Archivo',sans-serif;letter-spacing:-.02em}
 
 /* desktop layout helpers */
 .matchgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
@@ -78,7 +81,7 @@ a{color:var(--celeste)}
 .topbar{position:sticky;top:0;z-index:30;background:var(--surface);
   border-bottom:2px solid transparent;border-image:linear-gradient(90deg,var(--green),var(--canarinho),var(--blue)) 1;
   padding:12px 0;display:flex;align-items:center;gap:18px}
-.brand{display:flex;align-items:center;gap:8px;font-family:'Archivo';font-weight:900;font-size:22px;line-height:1;margin-right:10px}
+.brand{display:flex;align-items:center;gap:8px;font-family:'Bricolage Grotesque','Archivo';font-weight:800;font-size:22px;line-height:1;margin-right:10px}
 .brand .logo{width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex:none}
 .brand .wm{display:flex;align-items:baseline;gap:1px}
 .brand .b1{color:var(--chalk)} .brand .dot{color:var(--dotblack)} .brand .b2{color:var(--redlao)}
@@ -114,7 +117,7 @@ a{color:var(--celeste)}
 .empty{border:1px dashed var(--line);border-radius:var(--r);padding:26px 18px;text-align:center;color:var(--muted);font-size:14px}
 
 /* ---------- Match / Scoreboard card ---------- */
-.match{background:linear-gradient(180deg,var(--surface),var(--surface-2));border:1px solid var(--line);
+.match{background:var(--surface);border:1px solid var(--line);
   border-radius:var(--r);padding:13px 14px;margin-bottom:10px;position:relative;overflow:hidden;box-shadow:0 1px 2px rgba(20,20,20,.04)}
 .match.live{border-color:rgba(255,93,93,.45);box-shadow:0 0 0 1px rgba(255,93,93,.25)}
 .match-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
@@ -190,7 +193,7 @@ table.gt tr.q{box-shadow:inset 3px 0 0 var(--green)}
 /* ---------- Ranking ---------- */
 .rank-hero{display:flex;gap:8px;overflow-x:auto;padding:2px 0 6px;-webkit-overflow-scrolling:touch}
 .rank-hero::-webkit-scrollbar{display:none}
-.podium{flex:none;width:108px;background:linear-gradient(180deg,var(--surface),var(--surface-2));
+.podium{flex:none;width:108px;background:var(--surface);
   border:1px solid var(--line);border-radius:var(--r);padding:12px 10px;text-align:center}
 .podium.p1{border-color:var(--canarinho)}
 .podium .pos{font-family:'Archivo';font-weight:900;font-size:13px;color:var(--muted)}
@@ -208,7 +211,7 @@ table.gt tr.q{box-shadow:inset 3px 0 0 var(--green)}
 /* ---------- Ranking zones ---------- */
 .zone-h{display:flex;align-items:center;gap:9px;margin:22px 2px 10px}
 .zone-h .zi{font-size:18px}
-.zone-h .zt{font-family:'Archivo';font-weight:900;font-size:15px}
+.zone-h .zt{font-family:'Bricolage Grotesque','Archivo';font-weight:800;font-size:16px;letter-spacing:-.01em}
 .zone-h .zs{margin-left:auto;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .zone-h.know .zt{color:var(--green)}
 .zone-h.lay .zt{color:var(--live)}
@@ -442,7 +445,7 @@ table.gt tr.q{box-shadow:inset 3px 0 0 var(--green)}
   box-shadow:0 1px 2px rgba(20,20,20,.04);position:relative;overflow:hidden}
 .livecard.on{border-color:rgba(229,72,77,.4)}
 .lc-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line)}
-.lc-title{font-family:'Archivo';font-weight:900;font-size:17px;letter-spacing:.02em}
+.lc-title{font-family:'Bricolage Grotesque','Archivo';font-weight:800;font-size:17px;letter-spacing:-.01em}
 .lc-rows{display:flex;flex-direction:column}
 .lc-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:14px}
 .lc-row .nk{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0}
