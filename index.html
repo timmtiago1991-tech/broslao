@@ -40,6 +40,7 @@ html[data-theme="dark"]{
   --blue-soft:#17233A; --dotblack:#E7EAF0;
 }
 html[data-theme="dark"] .input,html[data-theme="dark"] select.input{background:#1F242C}
+html[data-theme="dark"] .scorebox,html[data-theme="dark"] .scorebox:disabled{background:#1F242C;color:var(--chalk)}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
@@ -535,7 +536,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v32 · dark mode";
+const BUILD = "v33 · fix caixa palpite dark";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
