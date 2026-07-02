@@ -9,6 +9,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+<!-- tema (aplica antes de pintar, evita flash) -->
+<script>try{if(localStorage.getItem("broslao_theme")==="dark")document.documentElement.dataset.theme="dark";}catch(e){}</script>
+
 <!-- React + Babel -->
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -30,6 +33,13 @@
   --blue:#2563EB; --blue-deep:#1D4ED8; --blue-soft:#EAF1FE; --amber:#D97706;
   --r:14px;
 }
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --night:#0F1216; --surface:#181C22; --surface-2:#1F242C; --line:#2B313B;
+  --chalk:#E7EAF0; --muted:#9BA3B2; --muted-2:#6C7482;
+  --blue-soft:#17233A; --dotblack:#E7EAF0;
+}
+html[data-theme="dark"] .input,html[data-theme="dark"] select.input{background:#1F242C}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
@@ -525,7 +535,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v31 · barras de consenso";
+const BUILD = "v32 · dark mode";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -2223,6 +2233,13 @@ function traduzErro(c){
 /* ============================================================
    8. APP
    ============================================================ */
+function ThemeToggle(){
+  const [dark,setDark]=useState(()=>{ try{ return document.documentElement.dataset.theme==="dark"; }catch(e){ return false; } });
+  const toggle=()=>{ const nx=!dark; setDark(nx);
+    try{ document.documentElement.dataset.theme = nx?"dark":""; localStorage.setItem("broslao_theme", nx?"dark":"light"); }catch(e){} };
+  return <button className="iconbtn" onClick={toggle} title={dark?"Modo claro":"Modo escuro"} aria-label="Alternar tema">{dark?"☀️":"🌙"}</button>;
+}
+
 function App(){
   const [user,setUser]=useState(undefined);     // undefined=carregando, null=deslogado
   const [profile,setProfile]=useState(undefined);
@@ -2324,6 +2341,7 @@ function App(){
         </nav>
         <div className="spacer"></div>
         <span className="chip wc">🏆 Copa 2026</span>
+        <ThemeToggle/>
         {store.demo
           ? <span className="chip" style={{color:"var(--canarinho)",borderColor:"var(--canarinho)"}}>DEMO</span>
           : <button className="iconbtn" onClick={()=>store.signOut()}>Sair</button>}
