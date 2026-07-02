@@ -29,7 +29,7 @@
   --canarinho:#E3A008; --canarinho-deep:#C8871A; --green:#0E8A43;
   --celeste:#2E7BC4; --celeste-deep:#1F6FA8;
   --live:#C8452F; --gold:#C8871A;
-  --redlao:#C8452F; --dotblack:#1F2318;
+  --redlao:#0E8A43; --dotblack:#1F2318;
   --blue:#2A54D6; --blue-deep:#1E42B8; --blue-soft:#E9EDFB; --amber:#C87B12;
   --r:16px;
 }
@@ -40,7 +40,7 @@ html[data-theme="dark"]{
   --canarinho:#F0B429; --canarinho-deep:#F0B429; --green:#35C46E;
   --celeste:#5B9BE0; --celeste-deep:#5B9BE0; --live:#E0654E; --gold:#F0B429;
   --blue:#5B84F0; --blue-deep:#4A6FDB; --blue-soft:#1E2740; --amber:#E0954E;
-  --dotblack:#F3F1E8;
+  --dotblack:#F3F1E8; --redlao:#35C46E;
 }
 html[data-theme="dark"] .input,html[data-theme="dark"] select.input{background:#26271F}
 html[data-theme="dark"] .scorebox,html[data-theme="dark"] .scorebox:disabled{background:#26271F;color:var(--chalk)}
@@ -102,10 +102,14 @@ a{color:var(--celeste)}
   .topbar .chip.wc{display:none}        /* selo decorativo sai no mobile p/ enxugar o topo */
   .brand{font-size:20px;margin-right:0}
   .brand .logo{width:26px;height:26px}
-  .nav{order:3;width:100%;justify-content:space-between;gap:3px}
+  .nav{position:fixed;left:0;right:0;bottom:0;z-index:40;width:auto;order:0;justify-content:space-around;gap:2px;
+    background:var(--surface);border-top:1px solid var(--line);
+    padding:7px 6px calc(7px + env(safe-area-inset-bottom));box-shadow:0 -6px 18px rgba(0,0,0,.07)}
   .navlink{flex:1;min-width:0;flex-direction:column;align-items:center;gap:3px;
-    padding:7px 2px;font-size:10.5px;border-radius:9px;white-space:nowrap}
-  .navlink .ti{font-size:18px}
+    padding:6px 2px;font-size:10px;border-radius:10px;white-space:nowrap;color:var(--muted)}
+  .navlink .ti{font-size:20px}
+  .nav .navlink.active{background:none;color:var(--green)}
+  .nav .navlink.active:hover{background:none;color:var(--green)}
 }
 
 /* ---------- Layout ---------- */
@@ -200,6 +204,14 @@ table.gt tr.q{box-shadow:inset 3px 0 0 var(--green)}
 .podium.p1 .pos{color:var(--canarinho)}
 .podium .nick{font-weight:700;font-size:13px;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .podium .tp{font-family:'Archivo';font-weight:900;font-size:22px;margin-top:2px}
+.podium.p1{border-color:var(--canarinho);border-width:2px;box-shadow:0 8px 20px -12px rgba(227,160,8,.55)}
+.pmedal{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:22px;padding:0 8px;border-radius:99px;font-family:'Archivo';font-weight:900;font-size:12px;background:var(--surface-2);color:var(--muted)}
+.pmedal.m1{background:var(--canarinho);color:#3a2a02}
+.pmedal.m2{background:#D9D4C6;color:#4a4636}
+.pmedal.m3{background:#E4B483;color:#5c3a13}
+.pmedal.lant{background:rgba(200,69,47,.14);color:var(--live)}
+html[data-theme="dark"] .pmedal.m2{background:#3a3b34;color:#cfcabb}
+html[data-theme="dark"] .pmedal.m3{background:#4a3a28;color:#e4b483}
 .rrow{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);cursor:pointer}
 .rrow:last-child{border-bottom:none}
 .rrow .rk{font-family:'Archivo';font-weight:900;font-size:15px;width:22px;color:var(--muted);text-align:center}
@@ -210,7 +222,10 @@ table.gt tr.q{box-shadow:inset 3px 0 0 var(--green)}
 
 /* ---------- Ranking zones ---------- */
 .zone-h{display:flex;align-items:center;gap:9px;margin:22px 2px 10px}
-.zone-h .zi{font-size:18px}
+.zone-h .zi{font-size:18px;display:inline-flex;align-items:center}
+.zone-h.know .zi{color:var(--green)}
+.zone-h.lay .zi{color:var(--live)}
+.zone-h.mid .zi{color:var(--muted)}
 .zone-h .zt{font-family:'Bricolage Grotesque','Archivo';font-weight:800;font-size:16px;letter-spacing:-.01em}
 .zone-h .zs{margin-left:auto;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .zone-h.know .zt{color:var(--green)}
@@ -407,7 +422,8 @@ table.gt tr.q{box-shadow:inset 3px 0 0 var(--green)}
 .rsec-h{font-family:'Archivo';font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:22px 2px 11px;display:flex;align-items:center;gap:8px}
 .rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
 .rule-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:15px 16px;box-shadow:0 1px 2px rgba(20,20,20,.04)}
-.rule-card .ic{font-size:22px;line-height:1}
+.rule-card .ic{font-size:22px;line-height:1;color:var(--green)}
+.rule-card.gold .ic{color:var(--canarinho-deep)} .rule-card.zero .ic{color:var(--muted-2)}
 .rule-card .big{font-family:'Archivo';font-weight:900;font-size:28px;margin-top:6px;color:var(--blue)}
 .rule-card.gold .big{color:var(--canarinho-deep)} .rule-card.zero .big{color:var(--muted-2)}
 .rule-card h4{font-family:'Archivo';font-weight:800;margin:2px 0 4px;font-size:15px}
@@ -482,7 +498,7 @@ table.gt tr.q{box-shadow:inset 3px 0 0 var(--green)}
 /* ---------- Campeão da rodada ---------- */
 .round-champ{display:flex;align-items:center;gap:13px;color:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;
   background:radial-gradient(130% 170% at 0% 0%, #12a655 0%, #0a6e37 70%)}
-.round-champ .ic{font-size:28px;line-height:1}
+.round-champ .ic{flex:none;width:48px;height:48px;border-radius:15px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#FFE08A}
 .round-champ .t{font-family:'Archivo';font-weight:900;font-size:17px;line-height:1.15}
 .round-champ .s{font-size:12.5px;color:rgba(255,255,255,.9);font-weight:600;margin-top:3px}
 .daypills{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;-webkit-overflow-scrolling:touch}
@@ -526,6 +542,44 @@ table.gt tr.q{box-shadow:inset 3px 0 0 var(--green)}
 <script type="text/babel" data-presets="react">
 const { useState, useEffect, useMemo, useRef } = React;
 
+/* ---------- Ícones personalizados (glyphs SVG, sem emoji) ---------- */
+function Icon({name, size, style}){
+  const s = size || "1.15em";
+  const P = {
+    home:<path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>,
+    pencil:<g><path d="M4 20l1.2-4L16 5.2l2.8 2.8L8 19z"/><path d="M14 7.2l2.8 2.8"/></g>,
+    trophy:<g><path d="M8 4h8v4a4 4 0 0 1-8 0z"/><path d="M8 5H5.6a2.4 2.4 0 0 0 2.8 2.3M16 5h2.4a2.4 2.4 0 0 1-2.8 2.3"/><path d="M12 12v3M9.5 19h5M10.3 19l.4-4h2.6l.4 4"/></g>,
+    star:<path d="M12 4l2.3 5 5.2.4-4 3.4 1.3 5.1L12 20l-4.8 2.9 1.3-5.1-4-3.4 5.2-.4z"/>,
+    book:<g><path d="M6 3h11v18H7a1 1 0 0 1-1-1z"/><path d="M17 17H7a1 1 0 0 0-1 1"/></g>,
+    wrench:<path d="M15.5 3a4 4 0 0 0-3.9 5l-6.6 6.6a1.6 1.6 0 0 0 2.3 2.3L14 12.3A4 4 0 0 0 19 8.5l-2.3 2.3-1.5-1.5L17.8 7z"/>,
+    target:<g><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/></g>,
+    trend:<g><path d="M4 16l5-5 3 3 7-7"/><path d="M15 7h5v5"/></g>,
+    crown:<path d="M4 8l3.2 8h9.6L20 8l-4.4 3.4L12 5 8.4 11.4z"/>,
+    medal:<g><circle cx="12" cy="14.5" r="5"/><path d="M9.2 3.5l2.8 5 2.8-5"/></g>,
+    down:<path d="M12 5v13M6 12l6 6 6-6"/>,
+    ball:<g><circle cx="12" cy="12" r="9"/><path d="M12 7.5l3.3 2.4-1.3 3.9H10L8.7 9.9z"/><path d="M12 7.5V4.2M15.3 9.9l3-1.1M14 13.8l1.9 2.6M10 13.8l-1.9 2.6M8.7 9.9l-3-1.1"/></g>,
+    check:<path d="M4 12.5l5 5L20 6.5"/>,
+    x:<path d="M6 6l12 12M18 6L6 18"/>,
+    scale:<g><path d="M12 4.5v15M6.5 20h11M5 9l7-2.2L19 9"/><path d="M5 9l-2.2 5h4.4zM19 9l-2.2 5h4.4z"/></g>,
+    calendar:<g><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 9.5h16M8.5 3v4M15.5 3v4"/></g>,
+    pin:<g><path d="M12 21c4-4.5 6-8 6-11a6 6 0 0 0-12 0c0 3 2 6.5 6 11z"/><circle cx="12" cy="10" r="2.2"/></g>,
+    chart:<path d="M4 20h16M7 20v-6M12 20V8M17 20v-9"/>,
+    users:<g><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><path d="M16 5.7a3.1 3.1 0 0 1 0 5.9M20.5 19.5a5.5 5.5 0 0 0-3.2-5"/></g>,
+    clock:<g><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3.2 2"/></g>,
+    lock:<g><rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3"/></g>,
+    fire:<path d="M12 3.5s5 3.8 5 8.5a5 5 0 0 1-10 0c0-2 .9-3.2 2-4.2 0 1.2 1 2.2 2 2.2 0-2-1-3.8 1-6.5z"/>,
+    grid:<g><rect x="4" y="4" width="7" height="7" rx="1.4"/><rect x="13" y="4" width="7" height="7" rx="1.4"/><rect x="4" y="13" width="7" height="7" rx="1.4"/><rect x="13" y="13" width="7" height="7" rx="1.4"/></g>,
+    boot:<path d="M5 4v8l12 3.5V19H5a1 1 0 0 1-1-1V4z"/>,
+    glove:<path d="M8 20v-5H7a2 2 0 0 1 0-4h1V6.5a1.5 1.5 0 0 1 3 0V10h.5V5.5a1.5 1.5 0 0 1 3 0V16a4 4 0 0 1-4 4z"/>,
+    flag:<g><path d="M6.5 21V4"/><path d="M6.5 5h11l-2.2 3 2.2 3h-11"/></g>,
+    door:<g><rect x="6" y="3.5" width="12" height="17" rx="1.5"/><circle cx="14.5" cy="12" r="1" fill="currentColor" stroke="none"/></g>,
+    sun:<g><circle cx="12" cy="12" r="4.2"/><path d="M12 3v2.4M12 18.6V21M3 12h2.4M18.6 12H21M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"/></g>,
+    moon:<path d="M20.5 14.8A8.5 8.5 0 1 1 9.2 3.5a6.7 6.7 0 0 0 11.3 11.3z"/>,
+    play:<path d="M8 5l11 7-11 7z" fill="currentColor" stroke="none"/>,
+  };
+  return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={style}>{P[name]||null}</svg>;
+}
+
 /* ============================================================
    1. CONFIG  —  preencha para ativar o modo real (multiusuário)
    ============================================================ */
@@ -539,7 +593,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v34 · novo visual retro álbum";
+const BUILD = "v37 · nav inferior no mobile";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -723,11 +777,11 @@ const PHASES = {
 const PHASE_ORDER = Object.keys(PHASES).sort((a,b)=>PHASES[a].order-PHASES[b].order);
 
 const SPECIAL_DEFS = [
-  { key:"champion",  label:"Campeão",                 pts:30, ic:"🏆" },
-  { key:"runnerUp",  label:"Vice-campeão",            pts:15, ic:"🥈" },
-  { key:"topScorer", label:"Artilheiro · Chuteira de Ouro", pts:20, ic:"👟" },
-  { key:"bestPlayer",label:"Melhor jogador · Bola de Ouro", pts:20, ic:"⚽" },
-  { key:"bestGK",    label:"Melhor goleiro · Luva de Ouro", pts:20, ic:"🧤" },
+  { key:"champion",  label:"Campeão",                 pts:30, ic:"trophy" },
+  { key:"runnerUp",  label:"Vice-campeão",            pts:15, ic:"medal" },
+  { key:"topScorer", label:"Artilheiro · Chuteira de Ouro", pts:20, ic:"boot" },
+  { key:"bestPlayer",label:"Melhor jogador · Bola de Ouro", pts:20, ic:"ball" },
+  { key:"bestGK",    label:"Melhor goleiro · Luva de Ouro", pts:20, ic:"glove" },
 ];
 const LOCK_MIN = 5;
 const LEADER_BONUS = 3;
@@ -1065,10 +1119,10 @@ function MatchCard({m, now, guess, onSave, editable, ptResult, showSaved, allMat
     <div className={"match"+(st.key==="live"?" live":"")+(canRef?" tappable":"")}
       onClick={canRef?()=>setShowRef(true):undefined}>
       <div className="match-meta">
-        <span>🗓 {fmtBRT(m.kickoffISO)}</span>
+        <span><Icon name="calendar" size="1em"/> {fmtBRT(m.kickoffISO)}</span>
         {cd && <><span className="sep">·</span><span className={"cd "+cd.c}>{cd.t}</span></>}
-        {venue && <><span className="sep">·</span><span>📍 {venue}</span></>}
-        {canRef && <span className="refhint">📊 retrospecto</span>}
+        {venue && <><span className="sep">·</span><span><Icon name="pin" size="1em"/> {venue}</span></>}
+        {canRef && <span className="refhint"><Icon name="chart" size="1em"/> retrospecto</span>}
       </div>
       <div className="scoreline">
         <div className="team"><span className="tcode">{ta.c}</span><Flag name={m.teamA}/></div>
@@ -1088,12 +1142,12 @@ function MatchCard({m, now, guess, onSave, editable, ptResult, showSaved, allMat
           <span className="lab">Resultado oficial</span>
           <span className="res num">{m.resultA} × {m.resultB}</span>
           {participants && guessMap &&
-            <button className="seeguesses" onClick={(e)=>{e.stopPropagation();setShowGuesses(true);}}>👥 palpites</button>}
+            <button className="seeguesses" onClick={(e)=>{e.stopPropagation();setShowGuesses(true);}}><Icon name="users" size="1em"/> palpites</button>}
         </div>}
       {((editable && guess && guess.a!=null && guess.b!=null) || ptResult!==undefined || showSaved) &&
         <div className="match-foot">
           {editable && guess && guess.a!=null && guess.b!=null
-            ? <span className="reg">✓ registrado <b>{guess.a} - {guess.b}</b></span>
+            ? <span className="reg"><Icon name="check" size="1em"/> registrado <b>{guess.a} - {guess.b}</b></span>
             : <span/>}
           {ptResult!==undefined
             ? (ptResult===null
@@ -1101,7 +1155,7 @@ function MatchCard({m, now, guess, onSave, editable, ptResult, showSaved, allMat
                 : <span className={"pts "+(ptResult.pts>0?"pos":"zero")}>
                     {ptResult.pts>0?"+"+ptResult.pts+" pts":"0 pts"}{ptResult.exact?" · cravou":""}
                   </span>)
-            : (showSaved ? <span className="savep show">salvo ✓</span> : null)}
+            : (showSaved ? <span className="savep show">salvo <Icon name="check" size="1em"/></span> : null)}
         </div>}
       {showRef && <RefSheet m={m} allMatches={allMatches} onClose={()=>setShowRef(false)}/>}
       {showGuesses && <GuessesSheet m={m} participants={participants} guessMap={guessMap} onClose={()=>setShowGuesses(false)}/>}
@@ -1168,7 +1222,7 @@ function GroupTable({group, matches, guessMap, me}){
     .sort((x,y)=> y.P-x.P || y.sg-x.sg || y.gf-x.gf || x.team.localeCompare(y.team,"pt"));
   return (
     <div className="card narrow gtab">
-      <div className="gtab-h">📊 Classificação simulada · Grupo {group}</div>
+      <div className="gtab-h"><Icon name="chart" size="1em"/> Classificação simulada · Grupo {group}</div>
       <div className="gtab-sub">Jogos sem resultado oficial usam o <b>seu palpite</b>. Os 2 primeiros avançam. ({oficiais} oficial{oficiais!==1?"s":""} · {sim} simulado{sim!==1?"s":""})</div>
       <table className="gt">
         <thead><tr><th></th><th className="l">Time</th><th>P</th><th>J</th><th>V</th><th>E</th><th>D</th><th>SG</th></tr></thead>
@@ -1206,7 +1260,7 @@ function GuessesSheet({m, participants, guessMap, onClose}){
             <div className={"grow"+(r.exact?" cravou":"")} key={i}>
               <span className="gn">{r.nick}</span>
               <span className="gg">{r.has ? (r.a+" - "+r.b) : <span style={{color:"var(--muted-2)"}}>sem palpite</span>}</span>
-              <span className={"gpt "+(r.pts>0?"pos":"zero")}>{r.pts>0?"+"+r.pts:"0"}{r.exact?" ⭐":""}</span>
+              <span className={"gpt "+(r.pts>0?"pos":"zero")}>{r.pts>0?"+"+r.pts:"0"}{r.exact?<Icon name="star" size="0.85em" style={{color:"var(--canarinho-deep)",marginLeft:3,verticalAlign:"-1px"}}/>:""}</span>
             </div>
           ))}
         </div>
@@ -1238,7 +1292,7 @@ function flagEmoji(team){
 function PodiumCard({p, rank, total, medal, lant}){
   return (
     <div className={"podium"+(rank===1?" p1":"")+(lant?" lant":"")}>
-      <div className="pos">{medal} {rank}º</div>
+      <div className={"pmedal "+(lant?"lant":"m"+rank)}>{lant?<Icon name="down" size="0.8em"/>:rank+"º"}</div>
       <div style={{display:"flex",justifyContent:"center",margin:"8px 0 2px"}}><Avatar avatar={p.avatar} size={40}/></div>
       <div className="nick">{p.nickname}</div>
       <div className="tp num">{p.total}</div>
@@ -1350,7 +1404,7 @@ function Home({matches, now, ranking, me, guessMap, onSave, savedId}){
     <div className="wrap">
       {rc &&
         <div className="round-champ">
-          <span className="ic">🏅</span>
+          <span className="ic"><Icon name="trophy" size="27"/></span>
           <div>
             <div className="t">Campeão da rodada · {lastDone.label}</div>
             <div className="s">{rc.champs.map(c=>c.nickname).join(", ")} · +{rc.pts} pts naquele dia</div>
@@ -1360,17 +1414,17 @@ function Home({matches, now, ranking, me, guessMap, onSave, savedId}){
       {hasStats &&
         <div className="duo">
           <div className="king cravada">
-            <span className="ic">🎯</span>
+            <span className="ic"><Icon name="target"/></span>
             <div style={{minWidth:0}}>
-              <div className="lab">👑 {cravLeaders.length?kingLabel(cravLeaders,"Cravada"):"Rei da Cravada"}</div>
+              <div className="lab"><Icon name="crown" size="1em"/> {cravLeaders.length?kingLabel(cravLeaders,"Cravada"):"Rei da Cravada"}</div>
               <div className="who">{cravLeaders.length?cravLeaders.map(p=>p.nickname).join(", "):"A definir"}</div>
               {cravLeaders.length>0 && <div className="ct">{maxCrav} cravada{maxCrav!==1?"s":""}{cravLeaders.length>1?" · "+cravLeaders.length+" empatados":""}</div>}
             </div>
           </div>
           <div className="king consist">
-            <span className="ic">📈</span>
+            <span className="ic"><Icon name="trend"/></span>
             <div style={{minWidth:0}}>
-              <div className="lab">👑 {acerLeaders.length?kingLabel(acerLeaders,"Consistência"):"Rei da Consistência"}</div>
+              <div className="lab"><Icon name="crown" size="1em"/> {acerLeaders.length?kingLabel(acerLeaders,"Consistência"):"Rei da Consistência"}</div>
               <div className="who">{acerLeaders.length?acerLeaders.map(p=>p.nickname).join(", "):"A definir"}</div>
               {acerLeaders.length>0 && <div className="ct">{maxAcer} acerto{maxAcer!==1?"s":""}{acerLeaders.length>1?" · "+acerLeaders.length+" empatados":""}</div>}
             </div>
@@ -1380,14 +1434,14 @@ function Home({matches, now, ranking, me, guessMap, onSave, savedId}){
       {top3.length>0 &&
         <div className="hero-zones">
           <div>
-            <div className="zone-h know"><span className="zi">🧠</span><span className="zt">Os Grandes Conhecedores</span><span className="zs">{ranking.length}/{MAX_PLAYERS}</span></div>
+            <div className="zone-h know"><span className="zi"><Icon name="trophy"/></span><span className="zt">Os Grandes Conhecedores</span><span className="zs">{ranking.length}/{MAX_PLAYERS}</span></div>
             <div className="rank-hero">
               {top3.map((p,i)=><PodiumCard key={p.uid} p={p} rank={i+1} medal={medals[i]}/>)}
             </div>
           </div>
           {leigos.length>0 &&
             <div>
-              <div className="zone-h lay"><span className="zi">🙈</span><span className="zt">Os Grandes Leigos</span></div>
+              <div className="zone-h lay"><span className="zi"><Icon name="down"/></span><span className="zt">Os Grandes Leigos</span></div>
               <div className="rank-hero">
                 {leigos.map((p)=>{ const rank=ranking.indexOf(p)+1;
                   return <PodiumCard key={p.uid} p={p} rank={rank} medal={"🔻"} lant={rank===ranking.length}/>;})}
@@ -1458,8 +1512,8 @@ function MyPage({matches, now, me, guessMap, specialMap, official, onSave, onSav
           <span className="count">{matches.length} jogos · {kickTxt}</span>
           {phase==="grupos" &&
             <div className="viewtoggle">
-              <button className={view==="grupos"?"on":""} onClick={()=>setView("grupos")}>▦ Grupos</button>
-              <button className={view==="agenda"?"on":""} onClick={()=>setView("agenda")}>🗓 Agenda</button>
+              <button className={view==="grupos"?"on":""} onClick={()=>setView("grupos")}><Icon name="grid" size="1em"/> Grupos</button>
+              <button className={view==="agenda"?"on":""} onClick={()=>setView("agenda")}><Icon name="calendar" size="1em"/> Agenda</button>
             </div>}
         </div>
 
@@ -1535,12 +1589,12 @@ function Specials({defs, groups, matches, value, locked, official, onSave, admin
   return (
     <>
       {adminName
-        ? <div className="banner" style={{background:"rgba(37,99,235,.08)",borderColor:"rgba(37,99,235,.3)"}}>🛠️ Modo curador · editando os especiais de <b>{adminName}</b>. O fechamento é ignorado e cada alteração é salva na hora.</div>
-        : <div className="banner">⏱️ Os especiais podem ser preenchidos/editados até {fmtBRT(SPECIALS_LOCK)} BRT. Depois disso ficam visíveis a todos e são apurados no fim do torneio.</div>}
+        ? <div className="banner" style={{background:"rgba(37,99,235,.08)",borderColor:"rgba(37,99,235,.3)"}}><Icon name="wrench" size="1em"/> Modo curador · editando os especiais de <b>{adminName}</b>. O fechamento é ignorado e cada alteração é salva na hora.</div>
+        : <div className="banner"><Icon name="clock" size="1em"/> Os especiais podem ser preenchidos/editados até {fmtBRT(SPECIALS_LOCK)} BRT. Depois disso ficam visíveis a todos e são apurados no fim do torneio.</div>}
       <div className="sect-h"><h2>Palpites especiais</h2></div>
       {defs.map(s=>(
         <div className="field" key={s.key}>
-          <label>{s.ic} {s.label} · {s.pts} pts</label>
+          <label><Icon name={s.ic} size="1em"/> {s.label} · {s.pts} pts</label>
           {COUNTRY[s.key]
             ? <FlagSelect value={v[s.key]||""} options={ALL_TEAMS} disabled={locked}
                 placeholder={locked?"travado":"Escolha a seleção"} onChange={val=>set(s.key,val)}/>
@@ -1611,20 +1665,20 @@ function Ranking({ranking, me, matches, now, guessMap, specialMap, official}){
 
   return (
     <div className="wrap narrow">
-      <div className="zone-h know"><span className="zi">🧠</span><span className="zt">Zona dos Conhecedores</span><span className="zs">Top 4</span></div>
+      <div className="zone-h know"><span className="zi"><Icon name="trophy"/></span><span className="zt">Zona dos Conhecedores</span><span className="zs">Top 4</span></div>
       <div className="card know">
         {know.length ? know.map(p=>Row(p,ranking.indexOf(p))) : <div className="rrow"><span className="sub">Ainda sem participantes.</span></div>}
       </div>
 
       {middle.length>0 && <>
-        <div className="zone-h mid"><span className="zi">⚽</span><span className="zt">Meio de tabela</span></div>
+        <div className="zone-h mid"><span className="zi"><Icon name="ball"/></span><span className="zt">Meio de tabela</span></div>
         <div className="card">
           {middle.map(p=>Row(p,ranking.indexOf(p)))}
         </div>
       </>}
 
       {lay.length>0 && <>
-        <div className="zone-h lay"><span className="zi">🙈</span><span className="zt">Zona dos Leigos</span><span className="zs">Últimos 4</span></div>
+        <div className="zone-h lay"><span className="zi"><Icon name="down"/></span><span className="zt">Zona dos Leigos</span><span className="zs">Últimos 4</span></div>
         <div className="card lay">
           {lay.map(p=>Row(p,ranking.indexOf(p)))}
         </div>
@@ -1702,7 +1756,7 @@ function Admin({matches, official, participants, guessMap, now, onSaveGuessFor, 
   const groups=[...new Set(matches.filter(m=>m.phase==="grupos"&&m.group).map(m=>m.group))].sort();
   return (
     <div className="wrap narrow">
-      <div className="banner">🔐 Painel do curador. O lançamento manual de resultados é a <b>fonte da verdade</b>: ao salvar um placar, o ranking recalcula sozinho.</div>
+      <div className="banner"><Icon name="lock" size="1em"/> Painel do curador. O lançamento manual de resultados é a <b>fonte da verdade</b>: ao salvar um placar, o ranking recalcula sozinho.</div>
       <div className="tabs-pill">
         <button className={tab==="tabela"?"on":""} onClick={()=>setTab("tabela")}>Tabela & Resultados</button>
         <button className={tab==="oficiais"?"on":""} onClick={()=>setTab("oficiais")}>Especiais & Líderes</button>
@@ -1729,7 +1783,7 @@ function AdminGuesses({matches, participants, guessMap, now, onSaveGuessFor}){
   const save=()=>{ if(pid&&mid&&a!==""&&b!=="") onSaveGuessFor(pid,mid,{a:+a,b:+b}); };
   return (
     <>
-      <div className="banner">✏️ Edite o palpite de qualquer jogador, inclusive em jogos já em andamento. Use só para corrigir falhas — o ranking recalcula na hora.</div>
+      <div className="banner"><Icon name="pencil" size="1em"/> Edite o palpite de qualquer jogador, inclusive em jogos já em andamento. Use só para corrigir falhas — o ranking recalcula na hora.</div>
       <div className="field"><label>Jogador</label>
         <select className="input" value={pid} onChange={e=>setPid(e.target.value)}>
           <option value="">Selecione…</option>
@@ -1842,7 +1896,7 @@ function AdminOfficial({groups, matches, official, onSaveOfficial}){
       <div className="sect-h"><h2>Resultados especiais</h2></div>
       {SPECIAL_DEFS.map(s=>(
         <div className="field" key={s.key}>
-          <label>{s.ic} {s.label} · {s.pts} pts</label>
+          <label><Icon name={s.ic} size="1em"/> {s.label} · {s.pts} pts</label>
           {COUNTRY[s.key]
             ? <FlagSelect value={sp[s.key]||""} options={ALL_TEAMS}
                 placeholder="Escolha a seleção" onChange={val=>setSp({...sp,[s.key]:val})}/>
@@ -1876,7 +1930,7 @@ function PoolFull(){
   return (
     <div className="auth">
       <div className="hero">
-        <span className="ballmark">🚪</span>
+        <span className="ballmark"><Icon name="door" size="40"/></span>
         <div className="big" style={{fontSize:34}}>Bolão lotado</div>
         <div className="sub">As {MAX_PLAYERS} vagas já foram preenchidas. Fale com o curador se alguém liberar lugar.</div>
       </div>
@@ -1910,22 +1964,20 @@ function Confetti({n=34}){
 }
 
 function BallArt({size=130}){
-  const C=50, R=44;
-  const penta=(cx,cy,r,rot)=> Array.from({length:5},(_,i)=>{
-    const a=(rot + i*72)*Math.PI/180; return (cx+r*Math.cos(a)).toFixed(1)+","+(cy+r*Math.sin(a)).toFixed(1);
-  }).join(" ");
-  const dirs=[-90,-18,54,126,198];
   return (
-    <svg viewBox="0 0 100 100" width={size} height={size} xmlns="http://www.w3.org/2000/svg">
-      <circle cx={C} cy={C} r={R} fill="#fff" stroke="#0b3a22" strokeWidth="2.5"/>
-      <g stroke="#15241b" strokeWidth="2.4">
-        {dirs.map((d,i)=>{const a=d*Math.PI/180;
-          return <line key={i} x1={(C+14*Math.cos(a)).toFixed(1)} y1={(C+14*Math.sin(a)).toFixed(1)}
-            x2={(C+34*Math.cos(a)).toFixed(1)} y2={(C+34*Math.sin(a)).toFixed(1)}/>;})}
+    <svg viewBox="0 0 64 64" width={size} height={size} xmlns="http://www.w3.org/2000/svg">
+      <circle cx="32" cy="32" r="28" fill="#0E8A43" stroke="#fff" strokeWidth="2.2"/>
+      <polygon points="32,21 40.6,27.2 37.3,37.3 26.7,37.3 23.4,27.2" fill="#fff"/>
+      <g fill="#fff">
+        <polygon points="32,4.5 37,8.1 35.1,14 28.9,14 27,8.1"/>
+        <polygon points="58,26 60,32 55.5,36 50.6,32.3 52,26.5"/>
+        <polygon points="48,57 42.3,58.8 38.7,54 42,49.2 47.7,50.8"/>
+        <polygon points="16,57 21.7,58.8 25.3,54 22,49.2 16.3,50.8"/>
+        <polygon points="6,26 4,32 8.5,36 13.4,32.3 12,26.5"/>
       </g>
-      <polygon points={penta(C,C,15,-90)} fill="#15241b"/>
-      {dirs.map((d,i)=>{const a=d*Math.PI/180; const x=C+38*Math.cos(a), y=C+38*Math.sin(a);
-        return <polygon key={i} points={penta(x,y,7,d+90)} fill="#15241b"/>;})}
+      <g stroke="#0E8A43" strokeWidth="2" strokeLinecap="round">
+        <path d="M32 21 32 14M40.6 27.2 55 32.3M37.3 37.3 42 49.2M26.7 37.3 22 49.2M23.4 27.2 9 32.3"/>
+      </g>
     </svg>
   );
 }
@@ -2033,15 +2085,15 @@ function Regras(){
         </div>
       </div>
 
-      <div className="rsec-h">⚽ Pontos por jogo (fase de grupos)</div>
+      <div className="rsec-h"><Icon name="ball"/> Pontos por jogo (fase de grupos)</div>
       <div className="rules-grid">
-        <div className="rule-card"><div className="ic">🎯</div><div className="big">10</div><h4>Placar exato</h4><p>Cravou o resultado certinho (ex.: 2 a 1).</p></div>
-        <div className="rule-card"><div className="ic">⚖️</div><div className="big">6</div><h4>Vencedor + saldo</h4><p>Acertou quem ganhou e por quantos gols (apostou 2x1, deu 3x2).</p></div>
-        <div className="rule-card"><div className="ic">✅</div><div className="big">4</div><h4>Resultado certo</h4><p>Acertou só o vencedor — ou o empate.</p></div>
-        <div className="rule-card zero"><div className="ic">❌</div><div className="big">0</div><h4>Errou</h4><p>Não acertou nem o vencedor.</p></div>
+        <div className="rule-card"><div className="ic"><Icon name="target"/></div><div className="big">10</div><h4>Placar exato</h4><p>Cravou o resultado certinho (ex.: 2 a 1).</p></div>
+        <div className="rule-card"><div className="ic"><Icon name="scale"/></div><div className="big">6</div><h4>Vencedor + saldo</h4><p>Acertou quem ganhou e por quantos gols (apostou 2x1, deu 3x2).</p></div>
+        <div className="rule-card"><div className="ic"><Icon name="check"/></div><div className="big">4</div><h4>Resultado certo</h4><p>Acertou só o vencedor — ou o empate.</p></div>
+        <div className="rule-card zero"><div className="ic"><Icon name="x"/></div><div className="big">0</div><h4>Errou</h4><p>Não acertou nem o vencedor.</p></div>
       </div>
 
-      <div className="rsec-h">🔥 Multiplicador por fase</div>
+      <div className="rsec-h"><Icon name="fire"/> Multiplicador por fase</div>
       <table className="rtable">
         <thead><tr><th>Fase</th><th>Mult.</th><th>Exato</th><th>Venc.+saldo</th><th>Resultado</th></tr></thead>
         <tbody>
@@ -2050,17 +2102,17 @@ function Regras(){
         </tbody>
       </table>
 
-      <div className="rsec-h">🏆 Palpites especiais (cravados antes da abertura)</div>
+      <div className="rsec-h"><Icon name="trophy"/> Palpites especiais (cravados antes da abertura)</div>
       <div className="rules-grid">
-        <div className="rule-card gold"><div className="ic">🏆</div><div className="big">30</div><h4>Campeão</h4><p>Quem levanta a taça.</p></div>
-        <div className="rule-card gold"><div className="ic">🥈</div><div className="big">15</div><h4>Vice-campeão</h4><p>O finalista derrotado.</p></div>
-        <div className="rule-card gold"><div className="ic">👟</div><div className="big">20</div><h4>Artilheiro</h4><p>Chuteira de Ouro.</p></div>
-        <div className="rule-card gold"><div className="ic">⚽</div><div className="big">20</div><h4>Melhor jogador</h4><p>Bola de Ouro.</p></div>
-        <div className="rule-card gold"><div className="ic">🧤</div><div className="big">20</div><h4>Melhor goleiro</h4><p>Luva de Ouro.</p></div>
-        <div className="rule-card"><div className="ic">🥇</div><div className="big">+3</div><h4>Líder de grupo</h4><p>Por grupo acertado (até +36 nos 12 grupos).</p></div>
+        <div className="rule-card gold"><div className="ic"><Icon name="trophy"/></div><div className="big">30</div><h4>Campeão</h4><p>Quem levanta a taça.</p></div>
+        <div className="rule-card gold"><div className="ic"><Icon name="medal"/></div><div className="big">15</div><h4>Vice-campeão</h4><p>O finalista derrotado.</p></div>
+        <div className="rule-card gold"><div className="ic"><Icon name="boot"/></div><div className="big">20</div><h4>Artilheiro</h4><p>Chuteira de Ouro.</p></div>
+        <div className="rule-card gold"><div className="ic"><Icon name="ball"/></div><div className="big">20</div><h4>Melhor jogador</h4><p>Bola de Ouro.</p></div>
+        <div className="rule-card gold"><div className="ic"><Icon name="glove"/></div><div className="big">20</div><h4>Melhor goleiro</h4><p>Luva de Ouro.</p></div>
+        <div className="rule-card"><div className="ic"><Icon name="flag"/></div><div className="big">+3</div><h4>Líder de grupo</h4><p>Por grupo acertado (até +36 nos 12 grupos).</p></div>
       </div>
 
-      <div className="rsec-h">📋 Regras gerais</div>
+      <div className="rsec-h"><Icon name="book"/> Regras gerais</div>
       <div className="rules-text">
         <b>Travamento:</b> os palpites de cada jogo fecham <b>5 minutos antes do apito</b>. Os especiais e os líderes de grupo fecham em <b>{fmtBRT(SPECIALS_LOCK)} BRT</b>.<br/>
         <b>Mata-mata:</b> vale o resultado do tempo normal <b>+ prorrogação</b>; pênaltis não contam para o placar.<br/>
@@ -2084,7 +2136,7 @@ function SpecialsBoard({participants, specialMap, matches, now, me, isAdmin, off
                                  : ((official&&official.specials&&official.specials[row.key])||"");
   const rows=[
     ...SPECIAL_DEFS.map(s=>({key:s.key, label:s.label.split(" · ")[0], ic:s.ic, pts:s.pts, country:(s.key==="champion"||s.key==="runnerUp")})),
-    ...groups.map(g=>({key:"L"+g, leader:g, label:"Líder "+g, ic:"🥇", pts:LEADER_BONUS, country:true})),
+    ...groups.map(g=>({key:"L"+g, leader:g, label:"Líder "+g, ic:"flag", pts:LEADER_BONUS, country:true})),
   ];
   const cellVal=(p,row)=>{ const sp=specialMap[p.uid]||{};
     return row.leader ? ((sp.leaders||{})[row.leader]||"") : (sp[row.key]||""); };
@@ -2094,7 +2146,7 @@ function SpecialsBoard({participants, specialMap, matches, now, me, isAdmin, off
 
   const adminPanel = isAdmin ? (
     <div className="card narrow" style={{marginBottom:16,padding:"14px 18px",overflow:"visible"}}>
-      <div className="sect-h" style={{marginTop:0}}><h2>🛠️ Curador · editar especiais</h2></div>
+      <div className="sect-h" style={{marginTop:0}}><h2><Icon name="wrench" size="1em"/> Curador · editar especiais</h2></div>
       <div className="note" style={{marginBottom:10}}>Escolha um participante para editar os palpites especiais dele — mesmo após o fechamento.</div>
       <div className="field" style={{marginBottom:selUid?14:0}}>
         <label>Participante</label>
@@ -2117,7 +2169,7 @@ function SpecialsBoard({participants, specialMap, matches, now, me, isAdmin, off
         <div className="rules-hero"><BallArt size={60}/>
           <div><div className="rt">Especiais de todos</div>
             <div className="rs">Revelados quando a bola rolar no primeiro jogo.</div></div></div>
-        <div className="empty">🔒 Os palpites especiais de todo mundo ficam visíveis a partir do <b>início do primeiro jogo</b>
+        <div className="empty"><Icon name="lock" size="1em"/> Os palpites especiais de todo mundo ficam visíveis a partir do <b>início do primeiro jogo</b>
           {" ("+fmtBRT(OPENING_KICKOFF)+" BRT)"}.
           <br/>Até lá, cada um enxerga apenas os seus, na aba Palpites.</div>
       </div>
@@ -2139,8 +2191,8 @@ function SpecialsBoard({participants, specialMap, matches, now, me, isAdmin, off
             {rows.map(row=>{ const off=offOf(row);
               return (
               <tr key={row.key}>
-                <td className="rowh">{row.ic} {row.label}
-                  {off ? <span className="offans">✔ {row.country ? <><Flag name={off}/> {off}</> : off}</span> : null}
+                <td className="rowh"><Icon name={row.ic} size="1em"/> {row.label}
+                  {off ? <span className="offans"><Icon name="check" size="1em"/> {row.country ? <><Flag name={off}/> {off}</> : off}</span> : null}
                 </td>
                 {cols.map(p=>{ const v=cellVal(p,row); const hit=isHit(p,row);
                   return (
@@ -2154,7 +2206,7 @@ function SpecialsBoard({participants, specialMap, matches, now, me, isAdmin, off
             );})}
             {anyOfficial &&
               <tr className="totrow">
-                <td className="rowh">🏅 Pontos especiais</td>
+                <td className="rowh"><Icon name="medal" size="1em"/> Pontos especiais</td>
                 {cols.map(p=> <td key={p.uid} className={"val tot"+(p.uid===me?" you-col":"")}>{totalOf(p)}</td>)}
               </tr>}
           </tbody>
@@ -2194,9 +2246,9 @@ function Auth(){
         <div className="lbrand">BROS<span className="d">.</span><span className="r">lão</span></div>
         <div className="ltag">O bolão da Copa do Mundo 2026 entre amigos. Crave os placares, dispute os especiais e suba no ranking.</div>
         <div className="lfeat">
-          <div>🏆 104 jogos — da fase de grupos à final</div>
-          <div>🥇 Campeão, artilheiro e líderes de grupo</div>
-          <div>📊 Ranking ao vivo: Conhecedores x Leigos</div>
+          <div><Icon name="trophy" size="1em"/> 104 jogos — da fase de grupos à final</div>
+          <div><Icon name="flag" size="1em"/> Campeão, artilheiro e líderes de grupo</div>
+          <div><Icon name="chart" size="1em"/> Ranking ao vivo: Conhecedores x Leigos</div>
         </div>
         <div className="login-art"><BallArt size={300}/></div>
       </div>
@@ -2241,7 +2293,7 @@ function ThemeToggle(){
   const [dark,setDark]=useState(()=>{ try{ return document.documentElement.dataset.theme==="dark"; }catch(e){ return false; } });
   const toggle=()=>{ const nx=!dark; setDark(nx);
     try{ document.documentElement.dataset.theme = nx?"dark":""; localStorage.setItem("broslao_theme", nx?"dark":"light"); }catch(e){} };
-  return <button className="iconbtn" onClick={toggle} title={dark?"Modo claro":"Modo escuro"} aria-label="Alternar tema">{dark?"☀️":"🌙"}</button>;
+  return <button className="iconbtn" onClick={toggle} title={dark?"Modo claro":"Modo escuro"} aria-label="Alternar tema">{dark?<Icon name="sun"/>:<Icon name="moon"/>}</button>;
 }
 
 function App(){
@@ -2321,14 +2373,14 @@ function App(){
   const onImport=()=>{ OFFICIAL_FIXTURES.forEach(f=> store.saveMatch({...f})); popToast("Tabela oficial importada · "+OFFICIAL_FIXTURES.length+" jogos"); };
   const onProfileDone=(d)=> Promise.resolve(store.saveProfile(me,d)).then(()=> setProfile({uid:me,...d}));
 
-  if(user===undefined) return <div className="auth"><div className="hero"><span className="ballmark">⚽</span><div className="sub">Carregando…</div></div></div>;
+  if(user===undefined) return <div className="auth"><div className="hero"><span className="ballmark"><Icon name="ball" size="40"/></span><div className="sub">Carregando…</div></div></div>;
   if(!store.demo && user===null) return <Auth/>;
   if(profile===null){
     const jaSouParticipante = participants.some(p=>p.uid===me);
     if(!jaSouParticipante && participants.length >= MAX_PLAYERS) return <PoolFull/>;
     return <Onboarding onDone={onProfileDone}/>;
   }
-  if(profile===undefined) return <div className="auth"><div className="hero"><span className="ballmark">⚽</span><div className="sub">Carregando…</div></div></div>;
+  if(profile===undefined) return <div className="auth"><div className="hero"><span className="ballmark"><Icon name="ball" size="40"/></span><div className="sub">Carregando…</div></div></div>;
 
   return (
     <>
@@ -2336,15 +2388,15 @@ function App(){
         <div className="brand"><span className="logo"><BallArt size={28}/></span>
           <span className="wm"><span className="b1">BROS</span><span className="dot">.</span><span className="b2">lão</span></span></div>
         <nav className="nav">
-          <button className={"navlink"+(tab==="home"?" active":"")} onClick={()=>setTab("home")}><span className="ti">🏟️</span>Home</button>
-          <button className={"navlink"+(tab==="palpites"?" active":"")} onClick={()=>setTab("palpites")}><span className="ti">✍️</span>Palpites</button>
-          <button className={"navlink"+(tab==="ranking"?" active":"")} onClick={()=>setTab("ranking")}><span className="ti">🏆</span>Ranking</button>
-          <button className={"navlink"+(tab==="especiais"?" active":"")} onClick={()=>setTab("especiais")}><span className="ti">🔮</span>Especiais</button>
-          <button className={"navlink"+(tab==="regras"?" active":"")} onClick={()=>setTab("regras")}><span className="ti">📋</span>Regras</button>
-          {isAdmin && <button className={"navlink"+(tab==="admin"?" active":"")} onClick={()=>setTab("admin")}><span className="ti">🔧</span>Admin</button>}
+          <button className={"navlink"+(tab==="home"?" active":"")} onClick={()=>setTab("home")}><span className="ti"><Icon name="home"/></span>Home</button>
+          <button className={"navlink"+(tab==="palpites"?" active":"")} onClick={()=>setTab("palpites")}><span className="ti"><Icon name="pencil"/></span>Palpites</button>
+          <button className={"navlink"+(tab==="ranking"?" active":"")} onClick={()=>setTab("ranking")}><span className="ti"><Icon name="trophy"/></span>Ranking</button>
+          <button className={"navlink"+(tab==="especiais"?" active":"")} onClick={()=>setTab("especiais")}><span className="ti"><Icon name="star"/></span>Especiais</button>
+          <button className={"navlink"+(tab==="regras"?" active":"")} onClick={()=>setTab("regras")}><span className="ti"><Icon name="book"/></span>Regras</button>
+          {isAdmin && <button className={"navlink"+(tab==="admin"?" active":"")} onClick={()=>setTab("admin")}><span className="ti"><Icon name="wrench"/></span>Admin</button>}
         </nav>
         <div className="spacer"></div>
-        <span className="chip wc">🏆 Copa 2026</span>
+        <span className="chip wc"><Icon name="trophy" size="1em"/> Copa 2026</span>
         <ThemeToggle/>
         {store.demo
           ? <span className="chip" style={{color:"var(--canarinho)",borderColor:"var(--canarinho)"}}>DEMO</span>
@@ -2352,7 +2404,7 @@ function App(){
       </div>
 
       {store.demo && <div className="wrap" style={{paddingBottom:0}}>
-        <div className="banner">▶️ Modo demonstração com dados de exemplo (em memória, somem ao recarregar). Preencha o <b>firebaseConfig</b> no topo do arquivo para ativar o bolão real com login e ranking ao vivo.</div>
+        <div className="banner"><Icon name="play" size="1em"/> Modo demonstração com dados de exemplo (em memória, somem ao recarregar). Preencha o <b>firebaseConfig</b> no topo do arquivo para ativar o bolão real com login e ranking ao vivo.</div>
       </div>}
 
       {tab==="home" && <Home matches={matches} now={now} ranking={ranking} me={me}
