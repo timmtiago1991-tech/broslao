@@ -509,6 +509,17 @@ html[data-theme="dark"] .pmedal.m3{background:#4a3a28;color:#e4b483}
 /* ---------- Campeão da rodada ---------- */
 .round-champ{display:flex;align-items:center;gap:13px;color:#fff;border-radius:14px;padding:14px 16px;margin-bottom:14px;
   background:radial-gradient(130% 170% at 0% 0%, #12a655 0%, #0a6e37 70%)}
+/* ---------- Homenagem Messi ---------- */
+.messi{position:relative;overflow:hidden;display:flex;align-items:center;gap:14px;color:#fff;border-radius:14px;padding:15px 17px;margin-bottom:14px;
+  background:linear-gradient(135deg,#7BB0E4 0%,#5A93CE 52%,#3E79B8 100%)}
+.messi::before{content:"";position:absolute;inset:0;opacity:.16;
+  background:repeating-linear-gradient(90deg,#fff 0 14px,transparent 14px 30px)}
+.messi>*{position:relative}
+.messi .art{flex:none;width:64px;height:64px;display:flex;align-items:center;justify-content:center}
+.messi .eyebrow{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.92)}
+.messi .t{font-family:'Bricolage Grotesque','Archivo';font-weight:800;font-size:21px;line-height:1.1;letter-spacing:-.02em;margin-top:2px}
+.messi .s{font-size:12.5px;color:rgba(255,255,255,.92);font-weight:600;margin-top:2px}
+.messi .stars{position:absolute;top:11px;right:14px;display:flex;gap:3px;color:#FFD54A}
 .round-champ .ic{flex:none;width:48px;height:48px;border-radius:15px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#FFE08A}
 .round-champ .t{font-family:'Archivo';font-weight:900;font-size:17px;line-height:1.15}
 .round-champ .s{font-size:12.5px;color:rgba(255,255,255,.9);font-weight:600;margin-top:3px}
@@ -587,6 +598,7 @@ function Icon({name, size, style}){
     sun:<g><circle cx="12" cy="12" r="4.2"/><path d="M12 3v2.4M12 18.6V21M3 12h2.4M18.6 12H21M5.6 5.6l1.7 1.7M16.7 16.7l1.7 1.7M18.4 5.6l-1.7 1.7M7.3 16.7l-1.7 1.7"/></g>,
     moon:<path d="M20.5 14.8A8.5 8.5 0 1 1 9.2 3.5a6.7 6.7 0 0 0 11.3 11.3z"/>,
     play:<path d="M8 5l11 7-11 7z" fill="currentColor" stroke="none"/>,
+    goat:<g><path d="M5 4c0 2 .6 3.4 1.6 4.4M19 4c0 2-.6 3.4-1.6 4.4"/><path d="M6.8 8.6C5.8 10 5.3 11.7 5.3 13.5 5.3 17.6 8.3 20 12 20s6.7-2.4 6.7-6.5c0-1.8-.5-3.5-1.5-4.9C15.9 7.2 14.1 6.5 12 6.5s-3.9.7-5.2 2.1z"/><path d="M9.6 13h.01M14.4 13h.01"/><path d="M10.5 16.2c.9.6 2.1.6 3 0"/></g>,
   };
   return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" style={style}>{P[name]||null}</svg>;
 }
@@ -604,7 +616,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v40 · oitavas de final";
+const BUILD = "v42 · Messi caricatura";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -1429,14 +1441,32 @@ function Home({matches, now, ranking, me, guessMap, onSave, savedId}){
   const hasStats = maxCrav>0 || maxAcer>0;
   return (
     <div className="wrap">
-      {rc &&
-        <div className="round-champ">
-          <span className="ic"><Icon name="trophy" size="27"/></span>
-          <div>
-            <div className="t">Campeão da rodada · {lastDone.label}</div>
-            <div className="s">{rc.champs.map(c=>c.nickname).join(", ")} · +{rc.pts} pts naquele dia</div>
-          </div>
-        </div>}
+      <div className="messi">
+        <div className="stars"><Icon name="star" size="12"/><Icon name="star" size="12"/><Icon name="star" size="12"/></div>
+        <div className="art">
+          <svg width="64" height="64" viewBox="0 0 100 100">
+            <defs><clipPath id="messiBody"><path d="M31 66 q0 -18 19 -18 t19 18 l0 20 -38 0 z"/></clipPath></defs>
+            <path d="M31 66 q0 -18 19 -18 t19 18 l0 20 -38 0 z" fill="#fff"/>
+            <g clipPath="url(#messiBody)">
+              <rect x="31" y="48" width="38" height="40" fill="#fff"/>
+              <rect x="37" y="48" width="6" height="40" fill="#8FC0EA"/>
+              <rect x="49" y="48" width="6" height="40" fill="#8FC0EA"/>
+              <rect x="61" y="48" width="6" height="40" fill="#8FC0EA"/>
+            </g>
+            <text x="50" y="80" fontFamily="Archivo" fontWeight="900" fontSize="15" fill="#2F5F8F" textAnchor="middle">10</text>
+            <circle cx="50" cy="30" r="17" fill="#F0C9A0"/>
+            <path d="M33 28 q0 -18 17 -18 t17 18 q-4 -8 -17 -8 t-17 8z" fill="#5A3B26"/>
+            <path d="M35 32 q2 16 15 16 t15 -16 q-3 8 -15 8 t-15 -8z" fill="#5A3B26"/>
+            <circle cx="44" cy="30" r="1.8" fill="#3a2a1c"/><circle cx="56" cy="30" r="1.8" fill="#3a2a1c"/>
+            <path d="M45 37 q5 4 10 0" stroke="#8a5a3a" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <div className="eyebrow"><Icon name="goat" size="1.05em"/> Homenagem · GOAT</div>
+          <div className="t">Obrigado, Messi</div>
+          <div className="s">O maior de todos os tempos</div>
+        </div>
+      </div>
 
       {hasStats &&
         <div className="duo">
