@@ -619,7 +619,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v44 · homenagem Neymar";
+const BUILD = "v45 · quartas de final";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -727,6 +727,14 @@ const OITAVAS_FIXTURES = [
   K("oitavas","Suíça","Colômbia","07-07 17:00","BC Place · Vancouver"),
 ];
 
+// Quartas de final — confrontos/datas/sedes confirmados (BRT = ET + 1h).
+const QUARTAS_FIXTURES = [
+  K("quartas","França","Marrocos","07-09 17:00","Gillette · Boston"),
+  K("quartas","Espanha","Bélgica","07-10 16:00","SoFi · Inglewood"),
+  K("quartas","Noruega","Inglaterra","07-11 18:00","Hard Rock · Miami"),
+  K("quartas","Argentina","Suíça","07-11 22:00","Arrowhead · Kansas City"),
+];
+
 // Seleção -> sigla (FIFA) e código ISO para a bandeira (flagcdn.com)
 const TEAMS = {
   "México":{c:"MEX",iso:"mx"},"África do Sul":{c:"RSA",iso:"za"},"Coreia do Sul":{c:"KOR",iso:"kr"},"Chéquia":{c:"CZE",iso:"cz"},
@@ -791,6 +799,7 @@ const BASE_MATCHES = [
   ...OFFICIAL_FIXTURES.map((f,i)=>({...f, id:"g"+i})),
   ...R32_FIXTURES.map((f,i)=>({...f, id:"k"+i})),
   ...OITAVAS_FIXTURES.map((f,i)=>({...f, id:"o"+i})),
+  ...QUARTAS_FIXTURES.map((f,i)=>({...f, id:"q"+i})),
 ];
 
 // Mescla os jogos-base com os documentos do banco (resultados sobrescrevem; novos jogos são adicionados).
