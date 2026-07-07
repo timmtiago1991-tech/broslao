@@ -520,6 +520,9 @@ html[data-theme="dark"] .pmedal.m3{background:#4a3a28;color:#e4b483}
 .messi .t{font-family:'Bricolage Grotesque','Archivo';font-weight:800;font-size:21px;line-height:1.1;letter-spacing:-.02em;margin-top:2px}
 .messi .s{font-size:12.5px;color:rgba(255,255,255,.92);font-weight:600;margin-top:2px}
 .messi .stars{position:absolute;top:11px;right:14px;display:flex;gap:3px;color:#FFD54A}
+/* ---------- Homenagem Neymar (amarelinha) ---------- */
+.neymar{background:linear-gradient(135deg,#1BA85A 0%,#0E8A43 55%,#0A6E37 100%)}
+.neymar .stars{color:#FFDF00}
 .round-champ .ic{flex:none;width:48px;height:48px;border-radius:15px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#FFE08A}
 .round-champ .t{font-family:'Archivo';font-weight:900;font-size:17px;line-height:1.15}
 .round-champ .s{font-size:12.5px;color:rgba(255,255,255,.9);font-weight:600;margin-top:3px}
@@ -616,7 +619,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v42 · Messi caricatura";
+const BUILD = "v44 · homenagem Neymar";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -1441,30 +1444,28 @@ function Home({matches, now, ranking, me, guessMap, onSave, savedId}){
   const hasStats = maxCrav>0 || maxAcer>0;
   return (
     <div className="wrap">
-      <div className="messi">
-        <div className="stars"><Icon name="star" size="12"/><Icon name="star" size="12"/><Icon name="star" size="12"/></div>
+      <div className="messi neymar">
+        <div className="stars"><Icon name="ball" size="13"/></div>
         <div className="art">
           <svg width="64" height="64" viewBox="0 0 100 100">
-            <defs><clipPath id="messiBody"><path d="M31 66 q0 -18 19 -18 t19 18 l0 20 -38 0 z"/></clipPath></defs>
-            <path d="M31 66 q0 -18 19 -18 t19 18 l0 20 -38 0 z" fill="#fff"/>
-            <g clipPath="url(#messiBody)">
-              <rect x="31" y="48" width="38" height="40" fill="#fff"/>
-              <rect x="37" y="48" width="6" height="40" fill="#8FC0EA"/>
-              <rect x="49" y="48" width="6" height="40" fill="#8FC0EA"/>
-              <rect x="61" y="48" width="6" height="40" fill="#8FC0EA"/>
+            <defs><clipPath id="neyBody"><path d="M31 66 q0 -18 19 -18 t19 18 l0 20 -38 0 z"/></clipPath></defs>
+            <path d="M31 66 q0 -18 19 -18 t19 18 l0 20 -38 0 z" fill="#FFDF00"/>
+            <g clipPath="url(#neyBody)">
+              <path d="M31 52 q19 8 38 0 l0 -6 -38 0 z" fill="#0E8A43"/>
             </g>
-            <text x="50" y="80" fontFamily="Archivo" fontWeight="900" fontSize="15" fill="#2F5F8F" textAnchor="middle">10</text>
-            <circle cx="50" cy="30" r="17" fill="#F0C9A0"/>
-            <path d="M33 28 q0 -18 17 -18 t17 18 q-4 -8 -17 -8 t-17 8z" fill="#5A3B26"/>
-            <path d="M35 32 q2 16 15 16 t15 -16 q-3 8 -15 8 t-15 -8z" fill="#5A3B26"/>
-            <circle cx="44" cy="30" r="1.8" fill="#3a2a1c"/><circle cx="56" cy="30" r="1.8" fill="#3a2a1c"/>
-            <path d="M45 37 q5 4 10 0" stroke="#8a5a3a" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+            <text x="50" y="80" fontFamily="Archivo" fontWeight="900" fontSize="15" fill="#0E8A43" textAnchor="middle">10</text>
+            <circle cx="50" cy="30" r="17" fill="#C68642"/>
+            <path d="M34 26 q1 -16 16 -16 t16 16 q-3 -6 -8 -7 q-2 -4 -8 -4 q-9 0 -13 8 q-2 1 -3 3z" fill="#241812"/>
+            <path d="M50 10 q7 0 11 5 q-6 -2 -11 -2 z" fill="#3a2a1c"/>
+            <path d="M37 34 q3 10 13 10 t13 -10 q-3 5 -13 5 t-13 -5z" fill="#241812" opacity="0.55"/>
+            <circle cx="44" cy="30" r="1.8" fill="#241812"/><circle cx="56" cy="30" r="1.8" fill="#241812"/>
+            <path d="M45 37 q5 4 10 0" stroke="#7a4a2a" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
           </svg>
         </div>
         <div>
-          <div className="eyebrow"><Icon name="goat" size="1.05em"/> Homenagem · GOAT</div>
-          <div className="t">Obrigado, Messi</div>
-          <div className="s">O maior de todos os tempos</div>
+          <div className="eyebrow"><Icon name="ball" size="1.05em"/> Adeus · Craque</div>
+          <div className="t">Adeus a Neymar</div>
+          <div className="s">Obrigado pelos 80 gols com a amarelinha · Maior artilheiro da Seleção</div>
         </div>
       </div>
 
