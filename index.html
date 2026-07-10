@@ -148,6 +148,9 @@ a{color:var(--celeste)}
 .scorebox:focus{outline:none;border-color:var(--canarinho);box-shadow:0 0 0 3px rgba(255,210,74,.18)}
 .scorebox:disabled{opacity:1;background:#FAF8F2;color:var(--chalk)}
 .score-x{color:var(--muted-2);font-weight:800;font-size:15px}
+.team .tbd{font-size:11px;font-weight:800;color:var(--muted);line-height:1.25;max-width:120px;text-align:center}
+.tbd-note{margin-top:9px;padding-top:9px;border-top:1px dashed var(--line);font-size:11px;color:var(--muted);
+  display:flex;align-items:center;gap:6px;justify-content:center;text-align:center}
 .official{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:9px;padding-top:9px;border-top:1px dashed var(--line)}
 .official .lab{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
 .official .res{font-weight:900;font-family:'Archivo';color:var(--celeste);font-size:16px}
@@ -619,7 +622,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v45 · quartas de final";
+const BUILD = "v46 · chaveamento automático";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -693,6 +696,11 @@ const OFFICIAL_FIXTURES = [
 const K = (phase,teamA,teamB,dt,venue)=>({phase,group:"",teamA,teamB,
   kickoffISO:"2026-"+dt.slice(0,5)+"T"+dt.slice(6)+":00-03:00", venue, resultA:null, resultB:null});
 
+// Jogo definido pelo chaveamento: fromA/fromB referenciam o id de outro jogo.
+// "q0" = vencedor de q0 · "L:s0" = perdedor de s0. Times são resolvidos em runtime (resolveBracket).
+const KW = (phase,fromA,fromB,dt,venue)=>({phase,group:"",teamA:null,teamB:null,fromA,fromB,
+  kickoffISO:"2026-"+dt.slice(0,5)+"T"+dt.slice(6)+":00-03:00", venue, resultA:null, resultB:null});
+
 // 1/16 de final (Round of 32) — confronto/data/sede confirmados (BRT = ET + 1h).
 const R32_FIXTURES = [
   K("r32","África do Sul","Canadá","06-28 16:00","SoFi · Inglewood"),
@@ -733,6 +741,19 @@ const QUARTAS_FIXTURES = [
   K("quartas","Espanha","Bélgica","07-10 16:00","SoFi · Inglewood"),
   K("quartas","Noruega","Inglaterra","07-11 18:00","Hard Rock · Miami"),
   K("quartas","Argentina","Suíça","07-11 22:00","Arrowhead · Kansas City"),
+];
+
+// Semis, 3º lugar e Final — times definidos pelo CHAVEAMENTO (BRT). Datas/sedes/horários confirmados.
+// q0=Fra×Mar · q1=Esp×Bel · q2=Nor×Ing · q3=Arg×Sui
+const SEMIS_FIXTURES = [
+  KW("semis","q0","q1","07-14 16:00","AT&T · Arlington"),          // s0 (SF1)
+  KW("semis","q2","q3","07-15 16:00","Mercedes-Benz · Atlanta"),   // s1 (SF2)
+];
+const TERCEIRO_FIXTURES = [
+  KW("terceiro","L:s0","L:s1","07-18 18:00","Hard Rock · Miami"),  // t0 (perdedores das semis)
+];
+const FINAL_FIXTURES = [
+  KW("final","s0","s1","07-19 16:00","MetLife · Nova Jersey"),     // f0 (vencedores das semis)
 ];
 
 // Seleção -> sigla (FIFA) e código ISO para a bandeira (flagcdn.com)
@@ -800,16 +821,45 @@ const BASE_MATCHES = [
   ...R32_FIXTURES.map((f,i)=>({...f, id:"k"+i})),
   ...OITAVAS_FIXTURES.map((f,i)=>({...f, id:"o"+i})),
   ...QUARTAS_FIXTURES.map((f,i)=>({...f, id:"q"+i})),
+  ...SEMIS_FIXTURES.map((f,i)=>({...f, id:"s"+i})),
+  ...TERCEIRO_FIXTURES.map((f,i)=>({...f, id:"t"+i})),
+  ...FINAL_FIXTURES.map((f,i)=>({...f, id:"f"+i})),
 ];
 
 // Mescla os jogos-base com os documentos do banco (resultados sobrescrevem; novos jogos são adicionados).
+// Resolve os jogos de chaveamento: preenche teamA/teamB a partir do vencedor/perdedor do jogo de origem.
+// Placar decide o vencedor; em empate (pênaltis), usa o campo 'winner' (definido no Admin).
+function resolveBracket(list){
+  const byId={}; list.forEach(m=> byId[m.id]=m);
+  const winnerOf=(m)=>{ if(!m || m.resultA==null || m.resultB==null) return null;
+    if(m.resultA>m.resultB) return m.teamA;
+    if(m.resultB>m.resultA) return m.teamB;
+    return m.winner||null;                         // empate → depende de 'quem avançou'
+  };
+  const loserOf=(m)=>{ const w=winnerOf(m); if(!w||!m) return null; return w===m.teamA? m.teamB : m.teamA; };
+  const refTeam=(ref)=>{ if(!ref) return null; const L=ref.slice(0,2)==="L:"; const id=L?ref.slice(2):ref;
+    const src=byId[id]; return L? loserOf(src) : winnerOf(src); };
+  const refLabel=(ref)=>{ if(!ref) return "A definir"; const L=ref.slice(0,2)==="L:"; const id=L?ref.slice(2):ref;
+    const src=byId[id]; if(!src) return "A definir";
+    const a=src.teamA?teamInfo(src.teamA).c:"?", b=src.teamB?teamInfo(src.teamB).c:"?";
+    return (L?"Perdedor ":"Vencedor ")+a+" × "+b;
+  };
+  for(let p=0;p<4;p++){                              // passes p/ resolver a cadeia quartas→semis→final/3º
+    list.forEach(m=>{
+      if(m.fromA){ const t=refTeam(m.fromA); if(t) m.teamA=t; if(!m.teamA) m.labelA=refLabel(m.fromA); }
+      if(m.fromB){ const t=refTeam(m.fromB); if(t) m.teamB=t; if(!m.teamB) m.labelB=refLabel(m.fromB); }
+    });
+  }
+  return list;
+}
+
 function mergeMatches(remote){
   const byId={};
   BASE_MATCHES.forEach(m=>{ byId[m.id]={...m}; });
   (remote||[]).forEach(r=>{
     byId[r.id] = byId[r.id] ? {...byId[r.id], ...r} : r;
   });
-  return Object.values(byId);
+  return resolveBracket(Object.values(byId));
 }
 
 /* ============================================================
@@ -1156,14 +1206,15 @@ function MatchCard({m, now, guess, onSave, editable, ptResult, showSaved, allMat
   const [showRef,setShowRef]=useState(false);
   const [showGuesses,setShowGuesses]=useState(false);
   useEffect(()=>{ if(editing.current) return; setA(guess?.a ?? ""); setB(guess?.b ?? ""); },[guess?.a,guess?.b]);
-  const locked = !editable;
+  const resolved = !!(m.teamA && m.teamB);
+  const locked = !editable || !resolved;
   const st=matchStatus(m,now);
   const ta=teamInfo(m.teamA), tb=teamInfo(m.teamB);
   const cd=countdownLabel(m,now);
   const venue = m.venue || VENUES[m.teamA+"|"+m.teamB];
   const oneDigit=(val)=> String(val).replace(/\D/g,"").slice(-1);   // 1 dígito; o último vence (evita 33/30)
   const commit=(na,nb)=>{ if(na!=="" && nb!=="" && na!=null && nb!=null) onSave(m.id,{a:+na,b:+nb}); };
-  const canRef = !!allMatches;
+  const canRef = !!allMatches && resolved;
 
   return (
     <div className={"match"+(st.key==="live"?" live":"")+(canRef?" tappable":"")}
@@ -1175,18 +1226,28 @@ function MatchCard({m, now, guess, onSave, editable, ptResult, showSaved, allMat
         {canRef && <span className="refhint"><Icon name="chart" size="1em"/> retrospecto</span>}
       </div>
       <div className="scoreline">
-        <div className="team"><span className="tcode">{ta.c}</span><Flag name={m.teamA}/></div>
-        <div className="center" onClick={e=>e.stopPropagation()}>
-          <input className="scorebox num" inputMode="numeric" value={a} disabled={locked}
-            onFocus={()=>editing.current=true} onBlur={()=>editing.current=false}
-            onChange={e=>{const v=oneDigit(e.target.value);setA(v);commit(v,b);}} placeholder="–"/>
-          <span className="score-x">-</span>
-          <input className="scorebox num" inputMode="numeric" value={b} disabled={locked}
-            onFocus={()=>editing.current=true} onBlur={()=>editing.current=false}
-            onChange={e=>{const v=oneDigit(e.target.value);setB(v);commit(a,v);}} placeholder="–"/>
+        <div className="team">
+          {m.teamA ? <><span className="tcode">{ta.c}</span><Flag name={m.teamA}/></>
+                   : <span className="tbd">{m.labelA||"A definir"}</span>}
         </div>
-        <div className="team right"><Flag name={m.teamB}/><span className="tcode">{tb.c}</span></div>
+        <div className="center" onClick={e=>e.stopPropagation()}>
+          {resolved ? <>
+            <input className="scorebox num" inputMode="numeric" value={a} disabled={locked}
+              onFocus={()=>editing.current=true} onBlur={()=>editing.current=false}
+              onChange={e=>{const v=oneDigit(e.target.value);setA(v);commit(v,b);}} placeholder="–"/>
+            <span className="score-x">-</span>
+            <input className="scorebox num" inputMode="numeric" value={b} disabled={locked}
+              onFocus={()=>editing.current=true} onBlur={()=>editing.current=false}
+              onChange={e=>{const v=oneDigit(e.target.value);setB(v);commit(a,v);}} placeholder="–"/>
+          </> : <span className="score-x">×</span>}
+        </div>
+        <div className="team right">
+          {m.teamB ? <><Flag name={m.teamB}/><span className="tcode">{tb.c}</span></>
+                   : <span className="tbd">{m.labelB||"A definir"}</span>}
+        </div>
       </div>
+      {!resolved &&
+        <div className="tbd-note"><Icon name="lock" size="1em"/> Definido pelo chaveamento — palpite liberado quando os times forem conhecidos.</div>}
       {m.resultA!=null &&
         <div className="official">
           <span className="lab">Resultado oficial</span>
@@ -1930,24 +1991,41 @@ function AdminMatches({matches, onImport, onSaveMatch, onDeleteMatch, onSaveResu
 function AdminMatchRow({m, onSaveResult, onDeleteMatch}){
   const [ra,setRa]=useState(m.resultA??"");
   const [rb,setRb]=useState(m.resultB??"");
+  const [win,setWin]=useState(m.winner||"");
+  const isKO = m.phase!=="grupos";
+  const resolved = !!(m.teamA && m.teamB);
+  const level = ra!=="" && rb!=="" && (+ra===+rb);
   return (
     <div className="adm-match">
       <div className="h">
         <span className="note">{(PHASES[m.phase]||PHASES.grupos).label}{m.group?" · G"+m.group:""} · {fmtBRT(m.kickoffISO)}</span>
         <button className="btn danger sm" onClick={()=>{if(confirm("Excluir este jogo?"))onDeleteMatch(m.id);}}>Excluir</button>
       </div>
-      <div style={{fontWeight:700,marginBottom:9}}>{m.teamA} × {m.teamB}</div>
-      <div style={{display:"flex",gap:8,alignItems:"center"}}>
-        <input className="input num" style={{width:60,textAlign:"center"}} inputMode="numeric" value={ra}
-          onChange={e=>setRa(e.target.value.replace(/\D/g,"").slice(0,2))} placeholder="–"/>
-        <span className="score-x">×</span>
-        <input className="input num" style={{width:60,textAlign:"center"}} inputMode="numeric" value={rb}
-          onChange={e=>setRb(e.target.value.replace(/\D/g,"").slice(0,2))} placeholder="–"/>
-        <button className="btn cel sm" style={{flex:1}}
-          onClick={()=>onSaveResult(m.id, ra===""?null:+ra, rb===""?null:+rb)}>
-          {m.resultA!=null?"Atualizar resultado":"Lançar resultado"}
-        </button>
-      </div>
+      <div style={{fontWeight:700,marginBottom:9}}>{m.teamA||m.labelA||"?"} × {m.teamB||m.labelB||"?"}</div>
+      {resolved ? <>
+        <div style={{display:"flex",gap:8,alignItems:"center"}}>
+          <input className="input num" style={{width:60,textAlign:"center"}} inputMode="numeric" value={ra}
+            onChange={e=>setRa(e.target.value.replace(/\D/g,"").slice(0,2))} placeholder="–"/>
+          <span className="score-x">×</span>
+          <input className="input num" style={{width:60,textAlign:"center"}} inputMode="numeric" value={rb}
+            onChange={e=>setRb(e.target.value.replace(/\D/g,"").slice(0,2))} placeholder="–"/>
+          <button className="btn cel sm" style={{flex:1}}
+            onClick={()=>onSaveResult(m.id, ra===""?null:+ra, rb===""?null:+rb, win||null)}>
+            {m.resultA!=null?"Atualizar resultado":"Lançar resultado"}
+          </button>
+        </div>
+        {isKO &&
+          <div style={{marginTop:9}}>
+            <label className="note" style={{display:"block",marginBottom:4}}>
+              Quem avançou{level?" — empate, defina o vencedor dos pênaltis":" (só usado em empate)"}:
+            </label>
+            <select className="input" value={win} onChange={e=>setWin(e.target.value)}>
+              <option value="">Automático (pelo placar)</option>
+              <option value={m.teamA}>{m.teamA}</option>
+              <option value={m.teamB}>{m.teamB}</option>
+            </select>
+          </div>}
+      </> : <div className="note">Aguardando o chaveamento definir os times.</div>}
     </div>
   );
 }
@@ -2438,7 +2516,7 @@ function App(){
   };
   const onSaveMatch=(m)=>{ store.saveMatch(m); popToast("Jogo salvo"); };
   const onDeleteMatch=(id)=>{ store.deleteMatch(id); popToast("Jogo excluído"); };
-  const onSaveResult=(id,a,b)=>{ store.saveMatch({id,resultA:a,resultB:b}); popToast("Resultado lançado · ranking atualizado"); };
+  const onSaveResult=(id,a,b,winner)=>{ store.saveMatch({id,resultA:a,resultB:b,winner:winner||null}); popToast("Resultado lançado · ranking atualizado"); };
   const onSaveOfficial=(d)=>{ store.saveOfficial(d); popToast("Oficiais salvos"); };
   const onAdminSaveGuess=async(uid,mId,g)=>{
     const clean={a:cleanScore(g.a), b:cleanScore(g.b)};
