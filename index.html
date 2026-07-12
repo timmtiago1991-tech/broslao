@@ -482,6 +482,9 @@ html[data-theme="dark"] .pmedal.m3{background:#4a3a28;color:#e4b483}
 .lc-right{display:flex;align-items:center;gap:8px;flex:none;margin-left:8px}
 .traitor{font-size:10px;font-weight:800;background:rgba(229,72,77,.12);color:var(--live);
   border:1px solid rgba(229,72,77,.32);padding:3px 8px;border-radius:99px;white-space:nowrap;line-height:1}
+.pacheco{font-size:10px;font-weight:800;background:rgba(242,183,5,.14);color:#9A7A00;
+  border:1px solid rgba(242,183,5,.34);padding:3px 8px;border-radius:99px;white-space:nowrap;line-height:1}
+html[data-theme="dark"] .pacheco{color:#F2C94C}
 .lc-row .pl{font-family:'Archivo';font-weight:800;font-variant-numeric:tabular-nums;margin-left:10px}
 .lc-row .pl.none{color:var(--muted-2);font-family:'Inter';font-weight:600}
 
@@ -622,7 +625,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v46 · chaveamento automático";
+const BUILD = "v47 · tag Pacheco";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -1417,6 +1420,9 @@ function LiveGuessCard({m, people, guessMap}){
   const brMatch = m.teamA==="Brasil" || m.teamB==="Brasil";
   const isBrazilWin=(g)=>{ if(!g) return false; const a=+g.a, b=+g.b;
     return m.teamA==="Brasil" ? a>b : b>a; };
+  const argMatch = m.teamA==="Argentina" || m.teamB==="Argentina";
+  const isArgNotWin=(g)=>{ if(!g) return false; const a=+g.a, b=+g.b;   // derrota ou empate da Argentina
+    return m.teamA==="Argentina" ? a<=b : b<=a; };
   const list=[...people]
     .map(p=>({nick:p.nickname, g:guessMap[p.uid+"_"+m.id]}))
     .sort((a,b)=> a.nick.localeCompare(b.nick,"pt"));
@@ -1475,11 +1481,13 @@ function LiveGuessCard({m, people, guessMap}){
       <div className="lc-rows">
         {list.map((x,i)=>{
           const traidor = brMatch && x.g && !isBrazilWin(x.g);
+          const pacheco = argMatch && x.g && isArgNotWin(x.g);
           return (
             <div className="lc-row" key={i}>
               <span className="nk">{x.nick}</span>
               <span className="lc-right">
                 {traidor && <span className="traitor">🐔 Traidor da Pátria</span>}
+                {pacheco && <span className="pacheco">🇧🇷 Pacheco</span>}
                 <span className={"pl"+(x.g?"":" none")}>{x.g ? x.g.a+" - "+x.g.b : "—"}</span>
               </span>
             </div>
