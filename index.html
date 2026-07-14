@@ -529,6 +529,10 @@ html[data-theme="dark"] .pacheco{color:#F2C94C}
 /* ---------- Homenagem Neymar (amarelinha) ---------- */
 .neymar{background:linear-gradient(135deg,#1BA85A 0%,#0E8A43 55%,#0A6E37 100%)}
 .neymar .stars{color:#FFDF00}
+/* ---------- Vexame do bolão (zoeira) ---------- */
+.vexame{background:linear-gradient(135deg,#C0392B 0%,#8E1B14 55%,#5A0E0A 100%)}
+.vexame .stars{color:#FFC9C2}
+.vexame .vexemoji{font-size:46px;line-height:1}
 .round-champ .ic{flex:none;width:48px;height:48px;border-radius:15px;background:rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;color:#FFE08A}
 .round-champ .t{font-family:'Archivo';font-weight:900;font-size:17px;line-height:1.15}
 .round-champ .s{font-size:12.5px;color:rgba(255,255,255,.9);font-weight:600;margin-top:3px}
@@ -625,7 +629,7 @@ const firebaseConfig = {
 };
 // >>> E-mail com acesso ao painel Admin (mesmo das regras do Firestore):
 const ADMIN_EMAILS = ["timmtiago1991@gmail.com", "luigi.gubert@gmail.com", "gabrieltimm94@gmail.com"];
-const BUILD = "v47 · tag Pacheco";
+const BUILD = "v48 · vexame Kevin Vidaleros";
 
 // (opcional) URL de uma imagem própria para a tela de boas-vindas.
 // Deixe "" para usar a ilustração comemorativa embutida.
@@ -1522,28 +1526,13 @@ function Home({matches, now, ranking, me, guessMap, onSave, savedId}){
   const hasStats = maxCrav>0 || maxAcer>0;
   return (
     <div className="wrap">
-      <div className="messi neymar">
+      <div className="messi vexame">
         <div className="stars"><Icon name="ball" size="13"/></div>
-        <div className="art">
-          <svg width="64" height="64" viewBox="0 0 100 100">
-            <defs><clipPath id="neyBody"><path d="M31 66 q0 -18 19 -18 t19 18 l0 20 -38 0 z"/></clipPath></defs>
-            <path d="M31 66 q0 -18 19 -18 t19 18 l0 20 -38 0 z" fill="#FFDF00"/>
-            <g clipPath="url(#neyBody)">
-              <path d="M31 52 q19 8 38 0 l0 -6 -38 0 z" fill="#0E8A43"/>
-            </g>
-            <text x="50" y="80" fontFamily="Archivo" fontWeight="900" fontSize="15" fill="#0E8A43" textAnchor="middle">10</text>
-            <circle cx="50" cy="30" r="17" fill="#C68642"/>
-            <path d="M34 26 q1 -16 16 -16 t16 16 q-3 -6 -8 -7 q-2 -4 -8 -4 q-9 0 -13 8 q-2 1 -3 3z" fill="#241812"/>
-            <path d="M50 10 q7 0 11 5 q-6 -2 -11 -2 z" fill="#3a2a1c"/>
-            <path d="M37 34 q3 10 13 10 t13 -10 q-3 5 -13 5 t-13 -5z" fill="#241812" opacity="0.55"/>
-            <circle cx="44" cy="30" r="1.8" fill="#241812"/><circle cx="56" cy="30" r="1.8" fill="#241812"/>
-            <path d="M45 37 q5 4 10 0" stroke="#7a4a2a" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
-          </svg>
-        </div>
+        <div className="art"><div className="vexemoji">🤡</div></div>
         <div>
-          <div className="eyebrow"><Icon name="ball" size="1.05em"/> Adeus · Craque</div>
-          <div className="t">Adeus a Neymar</div>
-          <div className="s">Obrigado pelos 80 gols com a amarelinha · Maior artilheiro da Seleção</div>
+          <div className="eyebrow"><Icon name="ball" size="1.05em"/> Vergonha do bolão</div>
+          <div className="t">Kevin Vidaleros</div>
+          <div className="s">Desconhecedor máximo · palpita de olhos fechados e erra mesmo assim. A semifinal chegou — ele, não.</div>
         </div>
       </div>
 
